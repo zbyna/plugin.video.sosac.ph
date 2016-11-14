@@ -1,3 +1,40 @@
+[B]1.2.115:[/B] 31. 10. 2016
+- při přehrávání z media library přidává:
+  1. podporu pro automatické nastavení statusu shlédnuto 
+     při min 90 % přehrání položky  (zbyna)
+  2. osd menu s posterem (filmy), náhledem (seriály), dějem
+     a obsazením, vyžaduje stream.resolver 1.6.435  (zbyna) 
+- přidána podpora addonu Buggalo pro volitelné odeslání
+  chybového hlášení, po odsouhlasení uživatelem, 
+  na web: sosac.comli.com (zbyna)
+- opraveno download souborů s titulky,
+  vyžaduje stream.resolver 1.6.435  (zbyna)
+- opraveno WARNING: XFILE::CFileFactory::CreateLoader -,
+  vyžaduje stream.resolver 1.6.435  (zbyna)
+[B]1.2.11:[/B] 15. 10. 2016
+- prepsan PRINT na UTIL.Info/Debug/Error (ExSport)
+- STRING konverze, redukce SPAMu (ExSport)
+- zobrazena kvalita u filmu (ExSport)
+- odstranen problem s ruznymi typy objektu (ExSport)
+[B]1.2.10:[/B] 27. 08. 2016
+- fix osd diacritic when played from Media Library (zbyna)
+[B]1.2.9:[/B] 26. 08. 2016
+- sosac:Fix subscription update (zbyna)
+[B]1.2.8:[/B] 12. 08. 2016
+- zobrazeni CZ nazvu misto EN pri nastaveni Kodi-SK (ExSport)
+[B]1.2.7:[/B] 02. 08. 2016
+- zrychleni importu "Movies" do knihovny (ExSport)
+[B]1.2.6:[/B] 31. 07. 2016
+- subscription improvements (Libor Zoubek)
+- localized service log messages to english (Libor Zoubek)
+- fix #47,get rid of xbmc import (Libor Zoubek)
+- filmy podla zanru (Michal Paulovic)
+- opravy a pridane fce (ExSport)
+- add Slovak translation (jose1711)
+- code Climate: Check the code using pep8 (Lubo)
+- reformat the code (Lubo)
+- fix module level imports not being placed at top of file Lubo)
+- README: Add Code Climate badge
 [B]1.2.5:[/B] 26. 03. 2016
 - Oprava #41 Kdy plugin blokoval kodi v ukonční (Kuci)
 [B]1.2.4:[/B] 28. 02. 2016
