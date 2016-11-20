@@ -4,6 +4,7 @@ import xbmcgui
 import json
 import time
 from datetime import datetime, timedelta
+import _strptime
 import buggalo
 
 # import pydevd
@@ -24,7 +25,7 @@ class MyPlayer(xbmc.Player):
             # dummy call to fix weird error see:
             # http://bugs.python.org/issue7980
             try:
-                datetime.strptime('2012-01-01', )
+                datetime.strptime('2012-01-01', '%Y-%m-%d')
             except TypeError:
                 datetime(*(time.strptime('2012-01-01', '%Y-%m-%d')[0:6]))
         except Exception:
