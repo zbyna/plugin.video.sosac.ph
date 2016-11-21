@@ -210,6 +210,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         str(pocetOK)
                     vysledek = xbmcgui.Dialog()
                     vysledek.textviewer(self.getString(30205), vysl)
+                    super(XBMCSosac, self).play(item)
+                    xbmc.Player().stop()
+                    return
             else:
                 super(XBMCSosac, self).play(item)
 
