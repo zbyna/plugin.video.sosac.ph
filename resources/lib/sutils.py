@@ -81,6 +81,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         break
                     else:
                         pomTitle = xbmc.translatePath(item['info']['title'])
+                        if i > 1:
+                          # film is not in library (playing strm from Files)
+                            super(XBMCSosac, self).play(item)
+                            return
+                        else:
+                            i += 1
                 pomItemType = JSON_result["result"]["filedetails"]["type"]
                 pomItemDBID = JSON_result["result"]["filedetails"]["id"]
             except Exception:
