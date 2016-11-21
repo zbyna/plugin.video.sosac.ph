@@ -165,6 +165,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     ret = pDialog.create(self.getString(30204), '...')
                     procenta = 1.0 / len(dirs) * 100
                     i = 1
+                    pocetSTRM = 0
                     for di in dirs:
                         pom = os.path.join(vybranyAdresar, di)
                         adr, sou = xbmcvfs.listdir(pom)
@@ -174,7 +175,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             if 'strm' in s:
                                 s = os.path.join(pom, s.decode('utf8'))
                                 soubory.append(s)
-                                vysl += s + ' \n'
+                                pocetSTRM += 1
                         for aa in adr:
                             pom1 = os.path.join(pom, aa)
                             adr1, sou1 = xbmcvfs.listdir(pom1)
@@ -182,9 +183,13 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                 if 'strm' in s1:
                                     s1 = os.path.join(pom1, s1.decode('utf8'))
                                     soubory.append(s1)
-                                    vysl += s1 + ' \n'
-                    vysl += '--------------------\n' + \
+                                    pocetSTRM += 1
+                    vysl += str(pocetSTRM) + '\n' + '--------------------\n' + \
                         self.getString(30205) + '\n'
+                    del dirs
+                    del files
+                    del adr
+                    del sou
                     pocetOK = 0
                     pDialog = xbmcgui.DialogProgress()
                     ret = pDialog.create(self.getString(30207), '...')
@@ -208,6 +213,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         i += 1
                     vysl = vysl + self.getString(30206) + \
                         str(pocetOK)
+                    del soubory
                     vysledek = xbmcgui.Dialog()
                     vysledek.textviewer(self.getString(30205), vysl)
                     super(XBMCSosac, self).play(item)
