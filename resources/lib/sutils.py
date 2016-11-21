@@ -66,6 +66,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         # Override from xbmcprovider
         # ======================================================================
         buggalo.SUBMIT_URL = 'http://sosac.comli.com/submit.php'
+        i = 0
         if 'title' in item['info'].keys() and xbmcvfs.exists(item['info']['title']):
             try:
                 pomTitle = item['info']['title']
@@ -146,6 +147,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 c += 1
             while mujPlayer.isPlaying():
                 self.sleep(5000)
+            xbmc.executebuiltin('Container.Refresh')
         elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
             dialog = xbmcgui.Dialog()
             ret = dialog.select(self.getString(30200),
@@ -160,7 +162,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if vybranyAdresar != '':
                     dirs, files = xbmcvfs.listdir(vybranyAdresar)
                     soubory = list()
-                    vysl = self.getString(30204) + '\n'
+                    vysl = self.getString(30204) + ':\n'
                     pDialog = xbmcgui.DialogProgress()
                     ret = pDialog.create(self.getString(30204), '...')
                     procenta = 1.0 / len(dirs) * 100

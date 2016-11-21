@@ -71,7 +71,6 @@ class MyPlayer(xbmc.Player):
                                   "playcount": 1},
                        "id": 1}
             self.executeJSON(metaReq)
-        xbmc.executebuiltin('UpdateLibrary(video)')
 
     def onPlayBackStarted(self):
         try:
