@@ -1,3 +1,14 @@
+[B]1.2.116:[/B] 31. 10. 2016
+- opraveno exceptions.ImportError
+  viz. error id=15  na sosac.comli.com (zbyna)
+- opraveno zatuhnutí při pře přehrávání
+  nenascrapovaných strm souborů (zbyna)
+- opraveno korektní ukončení přehrávaní položky
+  spouštějící migraci strm souborů (zbyna)
+- snížení spotřeby paměti při migraci velkého
+  počtu strm souborů (zbyna)
+- zrychlení nastavení statusu shlédnuto pro
+  rozsáhlé media knihovny (zbyna)
 [B]1.2.115:[/B] 31. 10. 2016
 - při přehrávání z media library přidává:
   1. podporu pro automatické nastavení statusu shlédnuto 
