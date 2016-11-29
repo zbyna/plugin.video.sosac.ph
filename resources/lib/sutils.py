@@ -138,15 +138,28 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 JSON_result['result']['moviedetails']['genre'] = self.adjustGenre(
                     JSON_result['result']['moviedetails']['genre'])
                 item['info'] = JSON_result['result']['moviedetails']
+            pomDict = self.cache.get("resumePoints")
+            try:
+                pomSlovnik = eval(pomDict)
+            except Exception:
+                pomSlovnik = {}
+            if pomItemDBID in pomSlovnik:
+                dialog = xbmcgui.Dialog()
+                ret = dialog.select('Pokracovat :', ['od zacatku', 'od minule pozice'])
+                if ret == 0:
+                    del pomSlovnik[pomItemDBID]
+                    self.cache.set("resumePoints", repr(pomSlovnik))
+                del dialog
             super(XBMCSosac, self).play(item)
             mujPlayer = myPlayer.MyPlayer(
-                itemType=pomItemType, itemDBID=pomItemDBID)
+                itemType=pomItemType, itemDBID=pomItemDBID, slovnik=pomSlovnik)
             c = 0
             while not mujPlayer.isPlaying() and c < 2:
                 self.sleep(2000)
                 c += 1
             while mujPlayer.isPlaying():
                 self.sleep(5000)
+            self.cache.set("resumePoints", repr(pomSlovnik))
             xbmc.executebuiltin('Container.Refresh')
         elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
             dialog = xbmcgui.Dialog()

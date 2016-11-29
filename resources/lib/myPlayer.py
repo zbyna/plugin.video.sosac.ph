@@ -14,7 +14,7 @@ import buggalo
 
 class MyPlayer(xbmc.Player):
 
-    def __init__(self, itemType=None, itemDBID=None):
+    def __init__(self, itemType=None, itemDBID=None, slovnik=None):
         try:
             xbmc.Player.__init__(self)
             self.estimateFinishTime = 0
@@ -22,6 +22,7 @@ class MyPlayer(xbmc.Player):
             self.itemDuration = 0
             self.itemDBID = itemDBID
             self.itemType = itemType
+            self.pomSlovnik = slovnik
             # dummy call to fix weird error see:
             # http://bugs.python.org/issue7980
             try:
@@ -72,6 +73,16 @@ class MyPlayer(xbmc.Player):
                        "id": 1}
             self.executeJSON(metaReq)
 
+    def createResumePoint(self, seconds, total):
+        try:
+            pomer = seconds / total
+            if pomer < 0.05:
+                return
+            self.pomSlovnik.update({self.itemDBID: seconds})
+        except Exception:
+            buggalo.onExceptionRaised({'seconds: ': seconds})
+        return
+
     def onPlayBackStarted(self):
         try:
             # ListItem.Duration je z databáze, bývá nepřesná v řádech minut
@@ -86,9 +97,14 @@ class MyPlayer(xbmc.Player):
             # plánovaný čas dokončení 100 % přehrání
             self.estimateFinishTime = xbmc.getInfoLabel(
                 'Player.FinishTime(hh:mm:ss)')
+            if (not self.pomSlovnik) or (not self.itemDBID in self.pomSlovnik):
+                return
+            self.seekTime(self.pomSlovnik[self.itemDBID])
+            del self.pomSlovnik[self.itemDBID]
         except Exception:
             buggalo.onExceptionRaised({'self.itemDuration: ': self.itemDuration,
-                                       'self.estimateFinishTime: ': self.estimateFinishTime})
+                                       'self.estimateFinishTime: ': self.estimateFinishTime,
+                                       'pomSlovnik: ': json.dumps(self.pomSlovnik, indent=2)})
 
     def onPlayBackEnded(self):
         self.setWatched()
@@ -106,6 +122,9 @@ class MyPlayer(xbmc.Player):
             # upravit podmínku na 0.05 tj. zbývá shlédnout 5%
             if abs(timeRatio) < 0.1:
                 self.setWatched()
+            else:
+                self.createResumePoint((1 - timeRatio) * float((self.itemDuration).seconds),
+                                       float((self.itemDuration).seconds))
         except Exception:
             buggalo.onExceptionRaised({'self.itemDuration: ': self.itemDuration,
                                        'self.estimateFinishTime: ': self.estimateFinishTime,
