@@ -158,7 +158,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.sleep(2000)
                 c += 1
             while mujPlayer.isPlaying():
-                self.sleep(5000)
+                self.sleep(4000)
             self.cache.set("resumePoints", repr(pomSlovnik))
             xbmc.executebuiltin('Container.Refresh')
         elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
