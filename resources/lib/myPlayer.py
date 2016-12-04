@@ -113,6 +113,8 @@ class MyPlayer(xbmc.Player):
         try:
             # Player.TimeRemaining  - už zde nemá hodnotu
             # Player.FinishTime - kdy přehrávání skutečně zkončilo
+            timeDifference = 55555
+            timeRatio = 55555
             self.realFinishTime = xbmc.getInfoLabel(
                 'Player.FinishTime(hh:mm:ss)')
             timeDifference = self.get_sec(self.estimateFinishTime) - \
