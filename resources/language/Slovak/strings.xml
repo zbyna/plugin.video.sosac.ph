@@ -39,5 +39,15 @@
   <string id="30204">Hľadám strm súbory</string>
   <string id="30205">Výsledok migrácie strm súborov: </string>
   <string id="30206">Úspešne migrované súbory: </string>
-  <string id="30207">Zmena strm súborov</string>	
+  <string id="30207">Zmena strm súborov</string>
+  <string id="30300">[B]Filmy[/B]</string>
+  <string id="30301">[B]Seriály[/B]</string>
+  <string id="30302">[B]Filmy podľa žánrov[/B]</string>
+  <string id="30303">[B]Najobľúbenejšie filmy[/B]</string>
+  <string id="30304">[B]Najobľúbenejšie seriály[/B]</string>
+  <string id="30305">[B]Novo pridané filmy[/B]</string>
+  <string id="30306">[B]Novo pridané seriály[/B]</string>
+  <string id="30307">Pridaj všetko do knižnice</string> 
+  <string id="30308">Pridaj do knižnice</string>
+  <string id="30309">Zrušiť prihlásenie na odber</string>		
 </strings>

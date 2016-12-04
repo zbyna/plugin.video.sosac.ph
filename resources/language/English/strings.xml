@@ -44,4 +44,14 @@
     <string id="30205">Result of strm files migration: </string>
     <string id="30206">Files migrated successfully: </string>
     <string id="30207">Changing strm files</string>
+    <string id="30300">[B]Movies[/B]</string>
+    <string id="30301">[B]TV Shows[/B]</string>
+    <string id="30302">[B]Movies - by Genres[/B]</string>
+    <string id="30303">[B]Movies - Most popular[/B]</string>
+    <string id="30304">[B]TV Shows - Most popular[/B]</string>
+    <string id="30305">[B]Movies - Recently added[/B]</string>
+    <string id="30306">[B]TV Shows - Recently added[/B]</string>
+    <string id="30307">Add all to library</string>
+    <string id="30308">Add to library</string>
+    <string id="30309">Remove from subscription</string>
 </strings>

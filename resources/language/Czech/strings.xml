@@ -43,4 +43,14 @@
     <string id="30205">Výsledek migrace strm souborů: </string>
     <string id="30206">Úspěšně migrované soubory: </string>
     <string id="30207">Měním strm soubory</string>
+    <string id="30300">[B]Filmy[/B]</string>
+    <string id="30301">[B]Seriály[/B]</string>
+    <string id="30302">[B]Filmy podle žánrů[/B]</string>
+    <string id="30303">[B]Nejoblíbenější filmy[/B]</string>
+    <string id="30304">[B]Nejoblíbenější seriály[/B]</string>
+    <string id="30305">[B]Nově přidané filmy[/B]</string>
+    <string id="30306">[B]Nově přidané seriály[/B]</string>
+    <string id="30307">Přidej všechno do knihovny</string>
+    <string id="30308">Přidej do knihovny</string>
+    <string id="30309">Zrušit přihlášení k odběru</string>
 </strings>
