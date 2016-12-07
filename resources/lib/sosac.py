@@ -503,6 +503,7 @@ class SosacContentProvider(ContentProvider):
         util.info("Pocet: %d" % total)
         num = 0
         shows = []
+        i = 0
         subs = self.get_subs()
         for m in items:
             num += 1
@@ -513,13 +514,17 @@ class SosacContentProvider(ContentProvider):
                     'notify': True}
             if item['url'] in subs:
                 item['menu'] = {"[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'remove-subscription', 'name': m.group('name')}
+                    'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
+                    'action': 'remove-subscription', 'name': m.group('name')}
                 }
+                shows.insert(i, item)
+                i += 1
             else:
                 item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                    'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
-            # self._filter(result, item)
-            shows.append(item)
+                    'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
+                    'action': 'add-to-library', 'name': m.group('name')}}
+                shows.append(item)
+            #self._filter(shows, item)
         util.info("Resolved shows " + str(shows))
         shows = self.add_directory_flag(shows)
         return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
