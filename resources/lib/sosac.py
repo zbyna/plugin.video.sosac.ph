@@ -44,6 +44,7 @@ ISO_639_1_CZECH = "cs"
 MOST_POPULAR_TYPE = "most-popular"
 RECENTLY_ADDED_TYPE = "recently-added"
 SEARCH_TYPE = "search"
+SUBSCRIPTION_MANAGER = "subscription_manager"
 ADD_TO_LIBRARY = ""
 REMOVE_FROM_SUBSCRIPTION = ""
 
@@ -80,17 +81,18 @@ class SosacContentProvider(ContentProvider):
         ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
         result = []
         for title, url in [
-            (MOVIES, MOVIES_BASE_URL),
-            (TV_SHOWS, TV_SHOWS_BASE_URL),
-            (MOVIES_BY_GENRES, MOVIES_BASE_URL + "/" + MOVIES_GENRE),
-            (MOVIES_MOST_POPULAR,
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            (TV_SHOWS_MOST_POPULAR,
-             TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
-            (MOVIES_RECENTLY_ADDED,
-             MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
-            (TV_SHOWS_RECENTLY_ADDED,
-             TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE)]:
+                (MOVIES, MOVIES_BASE_URL),
+                (TV_SHOWS, TV_SHOWS_BASE_URL),
+                (MOVIES_BY_GENRES, MOVIES_BASE_URL + "/" + MOVIES_GENRE),
+                (MOVIES_MOST_POPULAR,
+                 MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
+                (TV_SHOWS_MOST_POPULAR,
+                 TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
+                (MOVIES_RECENTLY_ADDED,
+                 MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
+                (TV_SHOWS_RECENTLY_ADDED,
+                 TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
+                ('Subscription Manager', SUBSCRIPTION_MANAGER)]:
             item = self.dir_item(title=title, url=url)
             if title == MOVIES or title == TV_SHOWS or title == MOVIES_RECENTLY_ADDED:
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
@@ -215,6 +217,8 @@ class SosacContentProvider(ContentProvider):
             util.debug("xml letter")
             if "movie" in url:
                 return self.list_xml_letter(url)
+        if SUBSCRIPTION_MANAGER in url:
+            return self.subscription_manager_tvshows_all_xml()
 
         return [self.dir_item(title="I failed", url="fail")]
 
@@ -485,6 +489,40 @@ class SosacContentProvider(ContentProvider):
                     'action': 'add-to-library', 'name': m.group('name'), 'update': True,
                     'notify': True}
             self.parent.add_item(item)
+
+        util.info("done....")
+
+    def subscription_manager_tvshows_all_xml(self):
+        page = util.request('http://tv.prehraj.me/serialyxml.php')
+        data = util.substr(page, '<select name=\"serialy\">', '</select>')
+        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
+                            re.IGNORECASE | re.DOTALL)
+        total = float(len(list(items)))
+        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
+                            re.IGNORECASE | re.DOTALL)
+        util.info("Pocet: %d" % total)
+        num = 0
+        shows = []
+        subs = self.get_subs()
+        for m in items:
+            num += 1
+            perc = float(num / total) * 100
+            util.info("percento: %d" % int(perc))
+            item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
+                    'action': 'add-to-library', 'title': m.group('name'), 'update': True,
+                    'notify': True}
+            if item['url'] in subs:
+                item['menu'] = {"[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                    'url': m.group('url'), 'action': 'remove-subscription', 'name': m.group('name')}
+                }
+            else:
+                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                    'url': m.group('url'), 'action': 'add-to-library', 'name': m.group('name')}}
+            # self._filter(result, item)
+            shows.append(item)
+        util.info("Resolved shows " + str(shows))
+        shows = self.add_directory_flag(shows)
+        return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
 
         util.info("done....")
 
