@@ -65,6 +65,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         # ======================================================================
         # Override from xbmcprovider
         # ======================================================================
+        POKRACOVAT = self.getString(30208)
+        OD_ZACATKU = self.getString(30209)
+        OD_MINULE_POZICE = self.getString(30210)
         buggalo.SUBMIT_URL = 'http://sosac.comli.com/submit.php'
         i = 0
         if 'title' in item['info'].keys() and xbmcvfs.exists(item['info']['title']):
@@ -145,7 +148,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 pomSlovnik = {}
             if pomItemDBID in pomSlovnik:
                 dialog = xbmcgui.Dialog()
-                ret = dialog.select('Pokracovat :', ['od zacatku', 'od minule pozice'])
+                ret = dialog.select(POKRACOVAT, [OD_ZACATKU, OD_MINULE_POZICE])
                 if ret == 0:
                     del pomSlovnik[pomItemDBID]
                     self.cache.set("resumePoints", repr(pomSlovnik))
