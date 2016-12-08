@@ -91,7 +91,7 @@ class MyPlayer(xbmc.Player):
                 xbmc.sleep(1000)
                 self.itemDuration = xbmc.getInfoLabel(
                     'Player.TimeRemaining(hh:mm:ss)')
-                if self.itemDuration != '':
+                if (self.itemDuration != '') and (self.itemDuration != 0):
                     self.itemDuration = self.get_sec(self.itemDuration)
                     break
             # plánovaný čas dokončení 100 % přehrání
