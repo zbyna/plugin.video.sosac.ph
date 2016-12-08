@@ -17,9 +17,9 @@ class MyPlayer(xbmc.Player):
     def __init__(self, itemType=None, itemDBID=None, slovnik=None):
         try:
             xbmc.Player.__init__(self)
-            self.estimateFinishTime = 0
-            self.realFinishTime = 0
-            self.itemDuration = 0
+            self.estimateFinishTime = '00:00:00'
+            self.realFinishTime = '00:00:00'
+            self.itemDuration = '00:00:00'
             self.itemDBID = itemDBID
             self.itemType = itemType
             self.pomSlovnik = slovnik
@@ -91,7 +91,7 @@ class MyPlayer(xbmc.Player):
                 xbmc.sleep(1000)
                 self.itemDuration = xbmc.getInfoLabel(
                     'Player.TimeRemaining(hh:mm:ss)')
-                if (self.itemDuration != '') and (self.itemDuration != 0):
+                if (self.itemDuration != '') and (self.itemDuration != '00:00:00'):
                     self.itemDuration = self.get_sec(self.itemDuration)
                     break
             # plánovaný čas dokončení 100 % přehrání
