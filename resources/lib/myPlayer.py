@@ -14,7 +14,7 @@ import buggalo
 
 class MyPlayer(xbmc.Player):
 
-    def __init__(self, itemType=None, itemDBID=None, slovnik=None):
+    def __init__(self, itemType=None, itemDBID=None, slovnik=None, titulky=None):
         try:
             xbmc.Player.__init__(self)
             self.estimateFinishTime = '00:00:00'
@@ -23,6 +23,7 @@ class MyPlayer(xbmc.Player):
             self.itemDBID = itemDBID
             self.itemType = itemType
             self.pomSlovnik = slovnik
+            self.titulky = titulky
             # dummy call to fix weird error see:
             # http://bugs.python.org/issue7980
             try:
@@ -87,6 +88,8 @@ class MyPlayer(xbmc.Player):
         try:
             # ListItem.Duration je z databáze, bývá nepřesná v řádech minut
             # Player.TimeRemaining je přesnější
+            if self.titulky is not None:
+                self.setSubtitles(self.titulky[0])
             while True:
                 xbmc.sleep(1000)
                 self.itemDuration = xbmc.getInfoLabel(
