@@ -153,9 +153,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     del pomSlovnik[pomItemDBID]
                     self.cache.set("resumePoints", repr(pomSlovnik))
                 del dialog
-            super(XBMCSosac, self).play(item)
-            mujPlayer = myPlayer.MyPlayer(
-                itemType=pomItemType, itemDBID=pomItemDBID, slovnik=pomSlovnik)
+            pomTitulky = []
+            pomTitulky = super(XBMCSosac, self).play(item, pomTitulky)
+            if not pomTitulky:
+                pomTitulky = None
+            mujPlayer = myPlayer.MyPlayer(itemType=pomItemType, itemDBID=pomItemDBID,
+                                          slovnik=pomSlovnik, titulky=pomTitulky)
             c = 0
             while not mujPlayer.isPlaying() and c < 2:
                 self.sleep(2000)
