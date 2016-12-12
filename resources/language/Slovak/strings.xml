@@ -39,5 +39,8 @@
   <string id="30204">Hľadám strm súbory</string>
   <string id="30205">Výsledok migrácie strm súborov: </string>
   <string id="30206">Úspešne migrované súbory: </string>
-  <string id="30207">Zmena strm súborov</string>	
+  <string id="30207">Zmena strm súborov</string>
+  <string id="30208">Pokračovať?</string>
+  <string id="30209">od začiatku</string>
+  <string id="30210">od minulej pozície</string>	
 </strings>
