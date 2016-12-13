@@ -40,6 +40,10 @@
   <string id="30205">Výsledok migrácie strm súborov: </string>
   <string id="30206">Úspešne migrované súbory: </string>
   <string id="30207">Zmena strm súborov</string>
+  <string id="30208">Pokračovať?</string>
+  <string id="30209">od začiatku</string>
+  <string id="30210">od minulej pozície</string>	
+  <string id="30207">Zmena strm súborov</string>
   <string id="30300">[B]Filmy[/B]</string>
   <string id="30301">[B]Seriály[/B]</string>
   <string id="30302">[B]Filmy podľa žánrov[/B]</string>

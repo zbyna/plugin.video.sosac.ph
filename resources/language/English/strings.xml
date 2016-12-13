@@ -44,6 +44,9 @@
     <string id="30205">Result of strm files migration: </string>
     <string id="30206">Files migrated successfully: </string>
     <string id="30207">Changing strm files</string>
+    <string id="30208">Continue from?</string>
+    <string id="30209">beginning</string>
+    <string id="30210">last position</string>
     <string id="30300">[B]Movies[/B]</string>
     <string id="30301">[B]TV Shows[/B]</string>
     <string id="30302">[B]Movies - by Genres[/B]</string>

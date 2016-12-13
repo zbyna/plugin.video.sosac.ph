@@ -65,6 +65,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         # ======================================================================
         # Override from xbmcprovider
         # ======================================================================
+        POKRACOVAT = self.getString(30208)
+        OD_ZACATKU = self.getString(30209)
+        OD_MINULE_POZICE = self.getString(30210)
         buggalo.SUBMIT_URL = 'http://sosac.comli.com/submit.php'
         i = 0
         if 'title' in item['info'].keys() and xbmcvfs.exists(item['info']['title']):
@@ -138,15 +141,31 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 JSON_result['result']['moviedetails']['genre'] = self.adjustGenre(
                     JSON_result['result']['moviedetails']['genre'])
                 item['info'] = JSON_result['result']['moviedetails']
-            super(XBMCSosac, self).play(item)
-            mujPlayer = myPlayer.MyPlayer(
-                itemType=pomItemType, itemDBID=pomItemDBID)
+            pomDict = self.cache.get("resumePoints")
+            try:
+                pomSlovnik = eval(pomDict)
+            except Exception:
+                pomSlovnik = {}
+            if pomItemDBID in pomSlovnik:
+                dialog = xbmcgui.Dialog()
+                ret = dialog.select(POKRACOVAT, [OD_ZACATKU, OD_MINULE_POZICE])
+                if ret == 0:
+                    del pomSlovnik[pomItemDBID]
+                    self.cache.set("resumePoints", repr(pomSlovnik))
+                del dialog
+            pomTitulky = []
+            pomTitulky = super(XBMCSosac, self).play(item, pomTitulky)
+            if not pomTitulky:
+                pomTitulky = None
+            mujPlayer = myPlayer.MyPlayer(itemType=pomItemType, itemDBID=pomItemDBID,
+                                          slovnik=pomSlovnik, titulky=pomTitulky)
             c = 0
             while not mujPlayer.isPlaying() and c < 2:
                 self.sleep(2000)
                 c += 1
             while mujPlayer.isPlaying():
-                self.sleep(5000)
+                self.sleep(4000)
+            self.cache.set("resumePoints", repr(pomSlovnik))
             xbmc.executebuiltin('Container.Refresh')
         elif 'title' in item['info'].keys() and not xbmcvfs.exists(item['info']['title']):
             dialog = xbmcgui.Dialog()
