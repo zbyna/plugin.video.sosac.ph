@@ -446,6 +446,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 if self.add_item(params):
                     xbmc.executebuiltin('Container.Refresh')
                     return True
+                xbmc.executebuiltin('Container.Refresh')
                 return False
             if params['action'] == 'add-all-to-library':
                 self.dialog.create('sosac', 'Add all to library')
