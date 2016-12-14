@@ -501,36 +501,31 @@ class SosacContentProvider(ContentProvider):
         total = float(len(list(items)))
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
                             re.IGNORECASE | re.DOTALL)
-        util.info("Pocet: %d" % total)
-        num = 0
         shows = []
         i = 0
         subs = self.get_subs()
         for m in items:
-            num += 1
-            perc = float(num / total) * 100
-            util.info("percento: %d" % int(perc))
-            item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'add-to-library', 'title': m.group('name'), 'update': True,
-                    'notify': True}
-            if item['url'] in subs:
-                item['menu'] = {"[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+            flagged_item = self.dir_item()
+            flagged_item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
+                            'action': 'add-to-library', 'title': m.group('name'), 'update': True,
+                            'notify': True, 'type': 'dir', 'size': '0'}
+            if flagged_item['url'] in subs:
+                flagged_item['menu'] = {"[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
                     'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
                     'action': 'remove-subscription', 'name': m.group('name')}
                 }
-                shows.insert(i, item)
+                flagged_item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + flagged_item['title']
+                flagged_item['url'] = TV_SHOW_FLAG + flagged_item['url']
+                shows.insert(i, flagged_item)
                 i += 1
             else:
-                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                flagged_item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
                     'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'add-to-library', 'name': m.group('name')}}
-                shows.append(item)
-            #self._filter(shows, item)
-        util.info("Resolved shows " + str(shows))
-        shows = self.add_directory_flag(shows)
-        return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
-
-        util.info("done....")
+                    'action': 'add-to-library', 'name': m.group('name')}
+                }
+                flagged_item['url'] = TV_SHOW_FLAG + flagged_item['url']
+                shows.append(flagged_item)
+        return shows
 
     def list_movie_recently_added(self, url):
         result = []
