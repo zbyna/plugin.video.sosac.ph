@@ -79,6 +79,7 @@ class SosacContentProvider(ContentProvider):
         MOVIES_RECENTLY_ADDED = self.parent.getString(30305)
         TV_SHOWS_RECENTLY_ADDED = self.parent.getString(30306)
         ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
+        SPRAVCE_ODBERU = self.parent.getString(30310)
         result = []
         for title, url in [
                 (MOVIES, MOVIES_BASE_URL),
@@ -92,7 +93,7 @@ class SosacContentProvider(ContentProvider):
                  MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
                 (TV_SHOWS_RECENTLY_ADDED,
                  TV_SHOWS_BASE_URL + "/" + self.ISO_639_1_CZECH + RECENTLY_ADDED_TYPE),
-                ('Subscription Manager', SUBSCRIPTION_MANAGER)]:
+                (SPRAVCE_ODBERU, SUBSCRIPTION_MANAGER)]:
             item = self.dir_item(title=title, url=url)
             if title == MOVIES or title == TV_SHOWS or title == MOVIES_RECENTLY_ADDED:
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {

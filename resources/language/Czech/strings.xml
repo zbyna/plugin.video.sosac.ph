@@ -44,7 +44,7 @@
     <string id="30206">Úspěšně migrované soubory: </string>
     <string id="30207">Měním strm soubory</string>
     <string id="30208">Pokračovat?</string>
-    <string id="30209">od začátků</string>
+    <string id="30209">od začátku</string>
     <string id="30210">od minulé pozice</string>
     <string id="30300">[B]Filmy[/B]</string>
     <string id="30301">[B]Seriály[/B]</string>
@@ -56,4 +56,5 @@
     <string id="30307">Přidej všechno do knihovny</string>
     <string id="30308">Přidej do knihovny</string>
     <string id="30309">Zrušit přihlášení k odběru</string>
+    <string id="30310">[B]Správce odběrů[/B]</string>
 </strings>
