@@ -248,6 +248,17 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         else:
             super(XBMCSosac, self).play(item)
 
+    def root(self):
+        # ======================================================================
+        # Override from xbmcprovider
+        # ======================================================================
+        addonPom = self.addon
+        addonPom.setSetting(
+            "library-movies", xbmc.translatePath(addonPom.getSetting("library-movies")))
+        addonPom.setSetting(
+            "library-tvshows", xbmc.translatePath(addonPom.getSetting("library-tvshows")))
+        super(XBMCSosac, self).root()
+
     def make_name(self, text, lower=True):
         text = self.normalize_filename(text, "-_.' %s%s" % (string.ascii_letters, string.digits))
         word_re = re.compile(r'\b\w+\b')
