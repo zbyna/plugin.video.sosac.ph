@@ -85,8 +85,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         break
                     else:
                         pomTitle = xbmc.translatePath(item['info']['title'])
+                        if pomTitle.startswith('smb://'):
+                            pomTitle = xbmc.validatePath(pomTitle)
                         if i > 1:
-                          # film is not in library (playing strm from Files)
+                            xbmc.log('"film is not in library (playing from Files)"')
                             super(XBMCSosac, self).play(item)
                             return
                         else:
