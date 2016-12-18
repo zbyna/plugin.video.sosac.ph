@@ -29,7 +29,10 @@
 	<string id="30059">Od najnovších</string>
 	<string id="30100">Priečinok pre filmy</string>
 	<string id="30101">Priečinok pre seriály</string>
-	<string id="30102">Uspať po štarte</string>
+	<string id="30102">Oneskoriť štart služby o (hodiny)</string>
+  <string id="30103">Všeobecné</string>
+  <string id="30104">Služba knižnice</string>
+  <string id="30105">Predvolený čas pre obnovu seriálu (dni)</string>
 	<string id="30063">Vkladať titulky, ak sú k dispozícii</string>
 	<string id="31000">Údaje o použití sú zaslané iba v okamihu, keď spustíte prehrávanie alebo sťahovanie videa doplnkom.</string>
 	<string id="30200">Zistený starý formát súborov strm</string>
@@ -53,5 +56,6 @@
   <string id="30306">[B]Novo pridané seriály[/B]</string>
   <string id="30307">Pridaj všetko do knižnice</string> 
   <string id="30308">Pridaj do knižnice</string>
-  <string id="30309">Zrušiť prihlásenie na odber</string>		
+  <string id="30309">Zrušiť prihlásenie na odber</string>
+  <string id="30310">[B]Správca odberov[/B]</string>			
 </strings>
