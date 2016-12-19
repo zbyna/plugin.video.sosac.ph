@@ -1,3 +1,17 @@
+[B]1.2.117:[/B] 19. 12. 2016
+- automatické obnovení přehrávání při opětovném spuštění videa
+  z knihovny (zbyna)
+- přídán překlad dosud nelokalizovaných položek addonu - do angličtiny,  
+  slovenštiny, češtiny (zbyna)
+- přidán jednoduchy manažer odběru pro seriály (zbyna)
+- přidána možnost stahování na SMB zdroje, vyžaduje 
+  stream.resolver 1.6.446 (zbyna)
+- opraveno přehrávání z knihovny pro strm soubory umístěné na SMB zdroji
+- opraveno získávání titulků při přehrávání z knihovny na pomalejším internetovém
+  připojení, vyžaduje stream.resolver 1.6.446 (zbyna)
+- opraveno  nastavení knihovny sosáče na libovolný zdroj přímo z Kodi,
+  po obnovení defaultních hodnot (special:// ...) je 
+  třeba restartovat sosáč (zbyna) 
 [B]1.2.116:[/B] 31. 10. 2016
 - opraveno exceptions.ImportError
   viz. error id=15  na sosac.comli.com (zbyna)
