@@ -36,7 +36,9 @@ MOVIES_BASE_URL = "http://movies.prehraj.me"
 TV_SHOWS_BASE_URL = "http://tv.prehraj.me"
 MOVIES_A_TO_Z_TYPE = "movies-a-z"
 MOVIES_GENRE = "filmyxmlzanr.php"
+MOVIES_YEAR = "filmyxml.php"
 GENRE_PARAM = "zanr"
+YEAR_PARAM = "rok"
 TV_SHOWS_A_TO_Z_TYPE = "tv-shows-a-z"
 XML_LETTER = "xmlpismeno"
 TV_SHOW_FLAG = "#tvshow#"
@@ -80,11 +82,13 @@ class SosacContentProvider(ContentProvider):
         TV_SHOWS_RECENTLY_ADDED = self.parent.getString(30306)
         ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
         SPRAVCE_ODBERU = self.parent.getString(30310)
+        MOVIES_BY_YEAR = self.parent.getString(30311)
         result = []
         for title, url in [
                 (MOVIES, MOVIES_BASE_URL),
                 (TV_SHOWS, TV_SHOWS_BASE_URL),
                 (MOVIES_BY_GENRES, MOVIES_BASE_URL + "/" + MOVIES_GENRE),
+                (MOVIES_BY_YEAR, MOVIES_BASE_URL + "/" + MOVIES_YEAR),
                 (MOVIES_MOST_POPULAR,
                  MOVIES_BASE_URL + "/" + self.ISO_639_1_CZECH + MOST_POPULAR_TYPE),
                 (TV_SHOWS_MOST_POPULAR,
@@ -184,6 +188,8 @@ class SosacContentProvider(ContentProvider):
         util.info("Examining url " + url)
         if MOVIES_GENRE in url:
             return self.list_by_genres(url)
+        if MOVIES_YEAR in url:
+            return self.list_by_year(url)
         if self.is_most_popular(url):
             if "movie" in url:
                 return self.list_movies_by_letter(url)
@@ -234,6 +240,17 @@ class SosacContentProvider(ContentProvider):
                                  re.IGNORECASE | re.DOTALL):
                 item = {'url': url + "?" + GENRE_PARAM + "=" +
                         s.group(1), 'title': s.group(2), 'type': 'dir'}
+    def list_by_year(self, url):
+        if "?" + YEAR_PARAM in url:
+            return self.list_xml_letter(url)
+        else:
+            result = []
+            page = util.request(url)
+            data = util.substr(page, '<select name=\"rok\">', '</select')
+            for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
+                                 re.IGNORECASE | re.DOTALL):
+                if s.group(2) == '0000':
+                    continue
                 self._filter(result, item)
             return result
 
