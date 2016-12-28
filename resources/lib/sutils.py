@@ -444,6 +444,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return new_items
 
     def run_custom(self, params):
+        MOVIES = self.getString(30300)
+        TV_SHOWS = self.getString(30301)
+        MOVIES_BY_GENRES = self.getString(30302)
+        MOVIES_RECENTLY_ADDED = self.getString(30305)
+        MOVIES_BY_YEAR = self.getString(30311)
         if 'action' in params.keys():
             icon = os.path.join(self.addon.getAddonInfo('path'), 'icon.png')
             if params['action'] == 'remove-subscription':
@@ -464,11 +469,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if params['action'] == 'add-all-to-library':
                 self.dialog.create('sosac', 'Add all to library')
                 self.dialog.update(0)
-                if params['title'] == 'Movies':
+                if params['title'] == MOVIES:
                     self.provider.library_movies_all_xml()
-                elif params['title'] == 'Movies - Recently added':
+                elif params['title'] == MOVIES_RECENTLY_ADDED:
                     self.provider.library_movie_recently_added_xml()
-                elif params['title'] == 'TV Shows':
+                elif params['title'] == TV_SHOWS:
                     self.provider.library_tvshows_all_xml()
                 self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')
