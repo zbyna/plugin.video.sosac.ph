@@ -49,6 +49,7 @@ SEARCH_TYPE = "search"
 SUBSCRIPTION_MANAGER = "subscription_manager"
 ADD_TO_LIBRARY = ""
 REMOVE_FROM_SUBSCRIPTION = ""
+ADD_ALL_TO_LIBRARY = ""
 
 
 class SosacContentProvider(ContentProvider):
@@ -185,6 +186,8 @@ class SosacContentProvider(ContentProvider):
         ADD_TO_LIBRARY = self.parent.getString(30308)
         global REMOVE_FROM_SUBSCRIPTION
         REMOVE_FROM_SUBSCRIPTION = self.parent.getString(30309)
+        global ADD_ALL_TO_LIBRARY
+        ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
         util.info("Examining url " + url)
         if MOVIES_GENRE in url:
             return self.list_by_genres(url)
@@ -230,6 +233,7 @@ class SosacContentProvider(ContentProvider):
         return [self.dir_item(title="I failed", url="fail")]
 
     def list_by_genres(self, url):
+        MOVIES_BY_GENRES = self.parent.getString(30302)
         if "?" + GENRE_PARAM in url:
             return self.list_xml_letter(url)
         else:
@@ -238,9 +242,15 @@ class SosacContentProvider(ContentProvider):
             data = util.substr(page, '<select name=\"zanr\">', '</select')
             for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
                                  re.IGNORECASE | re.DOTALL):
-                item = {'url': url + "?" + GENRE_PARAM + "=" +
-                        s.group(1), 'title': s.group(2), 'type': 'dir'}
+                urlPom = url + "?" + GENRE_PARAM + "=" + s.group(1)
+                item = {'url': urlPom, 'title': s.group(2), 'type': 'dir'}
+                item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
+                    'action': 'add-all-to-library', 'title': MOVIES_BY_GENRES, 'url': urlPom}}
+                self._filter(result, item)
+            return result
+
     def list_by_year(self, url):
+        MOVIES_BY_YEAR = self.parent.getString(30311)
         if "?" + YEAR_PARAM in url:
             return self.list_xml_letter(url)
         else:
@@ -251,6 +261,10 @@ class SosacContentProvider(ContentProvider):
                                  re.IGNORECASE | re.DOTALL):
                 if s.group(2) == '0000':
                     continue
+                urlPom = url + "?" + YEAR_PARAM + "=" + s.group(1)
+                item = {'url': urlPom, 'title': s.group(2), 'type': 'dir'}
+                item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
+                    'action': 'add-all-to-library', 'title': MOVIES_BY_YEAR, 'url': urlPom}}
                 self._filter(result, item)
             return result
 
