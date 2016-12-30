@@ -479,6 +479,15 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.provider.list_xml_letter_to_library(params['url'])
                 self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')
+                return False
+            if params['action'] == 'remove-all-from-subscription':
+                self.cache.delete("subscription")
+                return False
+            if params['action'] == 'add-subscription':
+                subs = self.get_subs()
+                subs.update({params['url']: params['name']})
+                self.set_subs(subs)
+                xbmc.executebuiltin('Container.Refresh')
         return False
 
     def add_item_to_library(self, item_path, item_url):

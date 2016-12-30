@@ -50,6 +50,7 @@ SUBSCRIPTION_MANAGER = "subscription_manager"
 ADD_TO_LIBRARY = ""
 REMOVE_FROM_SUBSCRIPTION = ""
 ADD_ALL_TO_LIBRARY = ""
+SUBSCRIBE = ""
 
 
 class SosacContentProvider(ContentProvider):
@@ -84,6 +85,7 @@ class SosacContentProvider(ContentProvider):
         ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
         SPRAVCE_ODBERU = self.parent.getString(30310)
         MOVIES_BY_YEAR = self.parent.getString(30311)
+        REMOVE_ALL_FROM_SUBSCRIPTION = self.parent.getString(30313)
         result = []
         for title, url in [
                 (MOVIES, MOVIES_BASE_URL),
@@ -103,6 +105,9 @@ class SosacContentProvider(ContentProvider):
             if title == MOVIES or title == TV_SHOWS or title == MOVIES_RECENTLY_ADDED:
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
                     'action': 'add-all-to-library', 'title': title}}
+            if title == SPRAVCE_ODBERU:
+                item['menu'] = {"[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                    'action': 'remove-all-from-subscription', 'title': title}}
             result.append(item)
         return result
 
@@ -188,6 +193,8 @@ class SosacContentProvider(ContentProvider):
         REMOVE_FROM_SUBSCRIPTION = self.parent.getString(30309)
         global ADD_ALL_TO_LIBRARY
         ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
+        global SUBSCRIBE
+        SUBSCRIBE = self.parent.getString(30312)
         util.info("Examining url " + url)
         if MOVIES_GENRE in url:
             return self.list_by_genres(url)
@@ -286,7 +293,7 @@ class SosacContentProvider(ContentProvider):
                 item['url'] = self.base_url + '/player/' + self.parent.make_name(
                     film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
                 item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle}}
+                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle, }}
                 self._filter(result, item)
             except Exception, e:
                 util.error("ERR TITLE: " + item['title'] + " | " + str(e))
@@ -537,22 +544,34 @@ class SosacContentProvider(ContentProvider):
         subs = self.get_subs()
         for m in items:
             flagged_item = self.dir_item()
-            flagged_item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                            'action': 'add-to-library', 'title': m.group('name'), 'update': True,
+            urlPom = 'http://tv.prehraj.me/cs/detail/' + m.group('url')
+            namePom = m.group('name')
+            flagged_item = {'url': urlPom,
+                            'action': 'add-to-library', 'title': namePom, 'update': True,
                             'notify': True, 'type': 'dir', 'size': '0'}
             if flagged_item['url'] in subs:
-                flagged_item['menu'] = {"[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
-                    'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'remove-subscription', 'name': m.group('name')}
+                flagged_item['menu'] = {
+                    "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                        'url': urlPom,
+                        'action': 'remove-subscription', 'name': namePom
+                    }
                 }
                 flagged_item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + flagged_item['title']
                 flagged_item['url'] = TV_SHOW_FLAG + flagged_item['url']
                 shows.insert(i, flagged_item)
                 i += 1
             else:
-                flagged_item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                    'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'add-to-library', 'name': m.group('name')}
+                flagged_item['menu'] = {
+                    "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                        'url': urlPom,
+                        'action': 'add-to-library',
+                        'name': namePom
+                    },
+                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                        'url': urlPom,
+                        'action': 'add-subscription',
+                        'name': namePom
+                    }
                 }
                 flagged_item['url'] = TV_SHOW_FLAG + flagged_item['url']
                 shows.append(flagged_item)
