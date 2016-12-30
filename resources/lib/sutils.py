@@ -469,12 +469,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if params['action'] == 'add-all-to-library':
                 self.dialog.create('sosac', 'Add all to library')
                 self.dialog.update(0)
-                if params['title'] == MOVIES:
+                if params['title'].decode('utf8') == MOVIES:
                     self.provider.library_movies_all_xml()
-                elif params['title'] == MOVIES_RECENTLY_ADDED:
+                elif params['title'].decode('utf8') == MOVIES_RECENTLY_ADDED:
                     self.provider.library_movie_recently_added_xml()
-                elif params['title'] == TV_SHOWS:
+                elif params['title'].decode('utf8') == TV_SHOWS:
                     self.provider.library_tvshows_all_xml()
+                elif params['title'].decode('utf8') == MOVIES_BY_GENRES:
+                    self.provider.list_xml_letter_to_library(params['url'])
                 self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')
         return False
