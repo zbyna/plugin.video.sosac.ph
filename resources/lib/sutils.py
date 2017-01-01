@@ -150,8 +150,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 pomSlovnik = {}
             if pomItemDBID in pomSlovnik:
                 dialog = xbmcgui.Dialog()
-                ret = dialog.select(POKRACOVAT, [OD_ZACATKU, OD_MINULE_POZICE])
-                if ret == 0:
+                ret = dialog.select(POKRACOVAT, [OD_MINULE_POZICE, OD_ZACATKU])
+                if ret == 1:
                     del pomSlovnik[pomItemDBID]
                     self.cache.set("resumePoints", repr(pomSlovnik))
                 del dialog
