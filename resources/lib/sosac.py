@@ -29,6 +29,8 @@ import sys
 
 import util
 from provider import ContentProvider, cached, ResolveException
+import xbmc
+import xbmcgui
 
 sys.setrecursionlimit(10000)
 
@@ -538,6 +540,7 @@ class SosacContentProvider(ContentProvider):
 #        self.parent.dialog.close()
 
     def library_tvshows_all_xml(self):
+        SUBSCRIBE_ALL_TV_SHOWS = self.parent.getString(30314)
         page = util.request('http://tv.prehraj.me/serialyxml.php')
         data = util.substr(page, '<select name=\"serialy\">', '</select>')
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
@@ -546,6 +549,8 @@ class SosacContentProvider(ContentProvider):
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
                             re.IGNORECASE | re.DOTALL)
         util.info("Pocet: %d" % total)
+        dialog = xbmcgui.Dialog()
+        question = dialog.yesno(SUBSCRIBE_ALL_TV_SHOWS, '')
         num = 0
         for m in items:
             num += 1
@@ -557,8 +562,7 @@ class SosacContentProvider(ContentProvider):
             item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
                     'action': 'add-to-library', 'name': m.group('name'), 'update': True,
                     'notify': True}
-            self.parent.add_item(item)
-
+            self.parent.add_item(item, question)
         util.info("done....")
 
     def subscription_manager_tvshows_all_xml(self):

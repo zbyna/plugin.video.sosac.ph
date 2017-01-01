@@ -373,7 +373,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 tvid = None
         return tvid
 
-    def add_item(self, params):
+    def add_item(self, params, addToSubscription=False):
         error = False
         if not 'refresh' in params:
             params['refresh'] = str(self.getSetting("refresh_time"))
@@ -399,7 +399,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             subs = self.get_subs()
             item_dir = self.getSetting('library-tvshows')
 
-            if not params['url'] in subs.keys():
+            if not (params['url'] in subs) and addToSubscription:
                 subs.update({params['url']: params['name']})
                 self.set_subs(subs)
                 # self.addon.setSetting('tvshows-subs', json.dumps(subs))
