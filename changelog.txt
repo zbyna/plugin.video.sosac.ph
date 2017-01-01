@@ -1,3 +1,13 @@
+[B]1.2.118:[/B] 1. 1. 2017
+- opravena funkčnost menu "Přidej vše do knihovny" pro "Filmy", "Seriály" a 
+  "Nově přidané filmy" (zbyna)
+- přidána položka "Filmy dle roku" (zbyna)
+- přidáno kont. menu "Přidej vše do knihovny" pro žánr ve "Filmy podle žánrů" a 
+  rok ve "Filmy podle roku" (zbyna)
+- přidáno kont. menu "Přihlas k odběru" pro položky ve správci odběrů a 
+  "Odhlásit všechny odběry" pro root položku "Správce odběrů" (zbyna)
+- prohození položek v dialogu pro obnovení přehrávání (zbyna)
+- možnost nepřihlašovat k odběru při přidání všech seriálů do knihovny (zbyna)
 [B]1.2.117:[/B] 19. 12. 2016
 - automatické obnovení přehrávání při opětovném spuštění videa
   z knihovny (zbyna)
