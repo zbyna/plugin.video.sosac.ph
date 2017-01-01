@@ -264,8 +264,8 @@ class SosacContentProvider(ContentProvider):
             result = []
             page = util.request(url)
             data = util.substr(page, '<select name=\"rok\">', '</select')
-            for s in re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
-                                 re.IGNORECASE | re.DOTALL):
+            for s in reversed(list(re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
+                                               re.IGNORECASE | re.DOTALL))):
                 if s.group(2) == '0000':
                     continue
                 urlPom = url + "?" + YEAR_PARAM + "=" + s.group(1)
