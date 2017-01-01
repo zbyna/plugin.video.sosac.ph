@@ -459,7 +459,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.showNotification(params['name'], 'Removed from subscription')
                     xbmc.executebuiltin('Container.Refresh')
                 return False
-
             if params['action'] == 'add-to-library':
                 if self.add_item(params):
                     xbmc.executebuiltin('Container.Refresh')
@@ -476,6 +475,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 elif params['title'].decode('utf8') == TV_SHOWS:
                     self.provider.library_tvshows_all_xml()
                 elif params['title'].decode('utf8') == MOVIES_BY_GENRES:
+                    self.provider.list_xml_letter_to_library(params['url'])
+                elif params['title'].decode('utf8') == MOVIES_BY_YEAR:
                     self.provider.list_xml_letter_to_library(params['url'])
                 self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')

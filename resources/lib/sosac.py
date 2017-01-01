@@ -301,6 +301,36 @@ class SosacContentProvider(ContentProvider):
         util.debug(result)
         return result
 
+    def list_xml_letter_to_library(self, url):
+        result = []
+        data = util.request(url)
+        tree = ET.fromstring(data)
+        total = float(len(tree.findall('film')))
+        i = 0
+        for film in tree.findall('film'):
+            i += 1
+            item = self.video_item()
+            try:
+                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
+                    title = film.findtext('nazevcs').encode('utf-8')
+                else:
+                    title = film.findtext('nazeven').encode('utf-8')
+                basetitle = '%s (%s)' % (title, film.findtext('rokvydani'))
+                item['title'] = '%s' % (basetitle)
+                item['name'] = item['title']
+                item['url'] = self.base_url + '/player/' + self.parent.make_name(
+                    film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
+                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle}}
+                item['update'] = True
+                item['notify'] = False
+                procenta = (i / total) * 100
+                self.parent.dialog.update(int(procenta), item['title'])
+                self.parent.add_item(item)
+            except Exception, e:
+                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
+                pass
+
     def list_tv_show(self, url):
         result = []
         page = util.request(url)
