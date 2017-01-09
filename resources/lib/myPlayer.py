@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import xbmc
-import xbmcgui
 import json
 import time
 from datetime import datetime, timedelta

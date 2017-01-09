@@ -460,7 +460,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     xbmc.executebuiltin('Container.Refresh')
                 return False
             if params['action'] == 'add-to-library':
-                if self.add_item(params):
+                if self.add_item(params, addToSubscription=True):
                     xbmc.executebuiltin('Container.Refresh')
                     return True
                 xbmc.executebuiltin('Container.Refresh')
