@@ -29,10 +29,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         self.dialog = xbmcgui.DialogProgress()
         try:
             import StorageServer
-            self.cache = StorageServer.StorageServer("Downloader_json")
+            self.cache = StorageServer.StorageServer("Downloader")
         except:
             import storageserverdummy as StorageServer
-            self.cache = StorageServer.StorageServer("Downloader_json")
+            self.cache = StorageServer.StorageServer("Downloader")
 
     @staticmethod
     def executeJSON(request):
