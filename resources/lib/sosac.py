@@ -32,11 +32,13 @@ import util
 from provider import ContentProvider, cached, ResolveException
 import xbmc
 import xbmcgui
+from audioop import reverse
+from string import letters
 
 sys.setrecursionlimit(10000)
 
 MOVIES_BASE_URL = "http://movies.prehraj.me"
-MOVIES_YEAR = "filmyxml.php"
+MOVIES_YEAR = "ROKY/"
 YEAR_PARAM = "rok"
 TV_SHOW_FLAG = "#tvshow#"
 ISO_639_1_CZECH = "cs"
@@ -48,11 +50,11 @@ ADD_TO_LIBRARY = ""
 REMOVE_FROM_SUBSCRIPTION = ""
 ADD_ALL_TO_LIBRARY = ""
 SUBSCRIBE = ""
-J_MOVIES_A_TO_Z_TYPE = "/vystupy5981/souboryaz.json"
 J_MOVIES_GENRE = "/vystupy5981/souboryzanry.json"
 J_MOVIES_MOST_POPULAR = "/vystupy5981/moviesmostpopular.json"
 J_MOVIES_RECENTLY_ADDED = "/vystupy5981/moviesrecentlyadded.json"
 # hack missing json with a-z series
+J_MOVIES_A_TO_Z_TYPE = "/vystupy5981/souboryaz.json"
 J_TV_SHOWS_A_TO_Z_TYPE = "/vystupy5981/tvpismenaaz/"
 J_TV_SHOWS = "/vystupy5981/tvpismena/"
 J_SERIES = "/vystupy5981/serialy/"
@@ -226,21 +228,54 @@ class SosacContentProvider(ContentProvider):
             item['url'] = serial['l']
             result.append(item)
         return result
-
+       
+    @staticmethod
+    def all_movies_with_key(keyForDict):
+        # =======================================================================================
+        # Downloads all json for individual letters
+        # and creates {keyForDict : [ {movies} ]} from them so that
+        # movies in list contain keyForDict
+        # =======================================================================================
+        result = {}
+        seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
+        for letter in seznam :
+            pom = json.loads(util.request(seznam[letter]))
+            for p in pom:
+              if p[keyForDict] in result:
+                result[p[keyForDict]].append(p)
+              else:
+                result[p[keyForDict]] = [p]
+        return result
+    
+    def list_year(self,url):
+        result = []
+        data = self.all_movies_with_key('y')
+        year = url.split('=')
+        json_video_array = data[year[1]]
+        for video in json_video_array:
+            item = self.video_item()
+            item['title'] = self.get_video_name(video)
+            item['img'] = IMAGE_MOVIE + video['i']
+            item['url'] = video['l'] if video['l'] else ""
+            if RATING in video:
+                item['rating'] = video[RATING]
+            if LANG in video:
+                item['lang'] = video[LANG]
+            if QUALITY in video:
+                item['quality'] = video[QUALITY]
+            result.append(item)
+        return result
+     
     def list_by_year(self, url):
         MOVIES_BY_YEAR = self.parent.getString(30311)
         if "?" + YEAR_PARAM in url:
-            return self.list_xml_letter(url)
+            return self.list_year(url)
         else:
             result = []
-            page = util.request(url)
-            data = util.substr(page, '<select name=\"rok\">', '</select')
-            for s in reversed(list(re.finditer('<option value=\"([^\"]+)\">([^<]+)</option>', data,
-                                               re.IGNORECASE | re.DOTALL))):
-                if s.group(2) == '0000':
-                    continue
-                urlPom = url + "?" + YEAR_PARAM + "=" + s.group(1)
-                item = {'url': urlPom, 'title': s.group(2), 'type': 'dir'}
+            data = self.all_movies_with_key('y')
+            for s in sorted(data.keys(),reverse=True):
+                urlPom = url + "?" + YEAR_PARAM + "=" + s
+                item = {'url': urlPom, 'title': s, 'type': 'dir'}
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
                     'action': 'add-all-to-library', 'title': MOVIES_BY_YEAR, 'url': urlPom}}
                 self._filter(result, item)
