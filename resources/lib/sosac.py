@@ -228,6 +228,24 @@ class SosacContentProvider(ContentProvider):
             item['url'] = serial['l']
             result.append(item)
         return result
+    
+    @staticmethod
+    def all_tvshows_with_key(keyForDict):
+        # =======================================================================================
+        # Downloads all json for individual letters
+        # and creates {keyForDict : [ {tvshows} ]} from them so that
+        # movies in list contain keyForDict
+        # =======================================================================================
+        result = {}
+        for l in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
+                       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+            pom = json.loads(util.request(URL + J_TV_SHOWS + l + ".json"))
+            for p in pom:
+              if p[keyForDict] in result:
+                result[p[keyForDict]].append(p)
+              else:
+                result[p[keyForDict]] = [p]
+        return result
        
     @staticmethod
     def all_movies_with_key(keyForDict):
@@ -461,49 +479,44 @@ class SosacContentProvider(ContentProvider):
         util.info("done....")
 
     def subscription_manager_tvshows_all_xml(self):
-        page = util.request('http://tv.prehraj.me/serialyxml.php')
-        data = util.substr(page, '<select name=\"serialy\">', '</select>')
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        total = float(len(list(items)))
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
         shows = []
-        i = 0
-        subs = self.get_subs()
-        for m in items:
-            flagged_item = self.dir_item()
-            urlPom = 'http://tv.prehraj.me/cs/detail/' + m.group('url')
-            namePom = m.group('name')
-            flagged_item = {'url': urlPom,
-                            'action': 'add-to-library', 'title': namePom, 'update': True,
-                            'notify': True, 'type': 'dir', 'size': '0'}
-            if flagged_item['url'] in subs:
-                flagged_item['menu'] = {
-                    "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
-                        'url': urlPom,
-                        'action': 'remove-subscription', 'name': namePom
+        for l in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
+                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+            items = json.loads(util.request(URL + J_TV_SHOWS + l + ".json"))
+            i = 0
+            subs = self.get_subs()
+            for serial in items:
+                flag_item = self.dir_item()
+                urlPom = serial['l']
+                namePom = self.get_localized_name(serial['n'])
+                imgPom = IMAGE_SERIES + serial['i']
+                flag_item = {'url': urlPom,
+                             'action': 'add-to-library', 'title': namePom, 'update': True,
+                             'notify': True, 'type': 'dir', 'size': '0','img':imgPom}
+                if flag_item['url'] in subs:
+                    flag_item['menu'] = {
+                        "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                            'url': urlPom,
+                            'action': 'remove-subscription', 'name': namePom
+                        }
                     }
-                }
-                flagged_item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + flagged_item['title']
-                flagged_item['url'] = TV_SHOW_FLAG + flagged_item['url']
-                shows.insert(i, flagged_item)
-                i += 1
-            else:
-                flagged_item['menu'] = {
-                    "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                        'url': urlPom,
-                        'action': 'add-to-library',
-                        'name': namePom
-                    },
-                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
-                        'url': urlPom,
-                        'action': 'add-subscription',
-                        'name': namePom
+                    flag_item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + flag_item['title']
+                    shows.insert(i, flag_item)
+                    i += 1
+                else:
+                    flag_item['menu'] = {
+                        "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                            'url': urlPom,
+                            'action': 'add-to-library',
+                            'name': namePom
+                        },
+                        "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                            'url': urlPom,
+                            'action': 'add-subscription',
+                            'name': namePom
+                        }
                     }
-                }
-                flagged_item['url'] = TV_SHOW_FLAG + flagged_item['url']
-                shows.append(flagged_item)
+                    shows.append(flag_item)
         return shows
 
     def list_xml_letter_to_library(self, url):
