@@ -185,15 +185,21 @@ class SosacContentProvider(ContentProvider):
         json_video_array = json.loads(data)
         for video in json_video_array:
             item = self.video_item()
-            item['title'] = self.get_video_name(video)
+            namePom = self.get_video_name(video)
+            item['title'] = namePom
             item['img'] = IMAGE_MOVIE + video['i']
-            item['url'] = video['l'] if video['l'] else ""
+            urlPom = video['l'] if video['l'] else ""
+            item['url'] = urlPom
             if RATING in video:
                 item['rating'] = video[RATING]
             if LANG in video:
                 item['lang'] = video[LANG]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
+            item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
+                               { 'url': urlPom,
+                                 'action': 'add-to-library',
+                                 'name': namePom }}
             result.append(item)
         return result
 
@@ -252,15 +258,21 @@ class SosacContentProvider(ContentProvider):
         json_video_array = data[year[1]]
         for video in json_video_array:
             item = self.video_item()
-            item['title'] = self.get_video_name(video)
+            namePom = self.get_video_name(video)
+            item['title'] = namePom
             item['img'] = IMAGE_MOVIE + video['i']
-            item['url'] = video['l'] if video['l'] else ""
+            urlPom = video['l'] if video['l'] else ""
+            item['url'] = urlPom
             if RATING in video:
                 item['rating'] = video[RATING]
             if LANG in video:
                 item['lang'] = video[LANG]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
+            item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
+                               { 'url': urlPom,
+                                 'action': 'add-to-library',
+                                 'name': namePom }}
             result.append(item)
         return result
      
