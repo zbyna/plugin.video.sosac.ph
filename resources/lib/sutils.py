@@ -15,6 +15,7 @@ import myPlayer
 import json
 import buggalo
 from urlparse import urlparse
+from translatedStrings import *
 
 
 class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
@@ -65,9 +66,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         # ======================================================================
         # Override from xbmcprovider
         # ======================================================================
-        POKRACOVAT = self.getString(30208)
-        OD_ZACATKU = self.getString(30209)
-        OD_MINULE_POZICE = self.getString(30210)
         buggalo.SUBMIT_URL = 'http://sosac.comli.com/submit.php'
         i = 0
         if 'title' in item['info'].keys() and xbmcvfs.exists(item['info']['title']):
@@ -444,11 +442,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return new_items
 
     def run_custom(self, params):
-        MOVIES = self.getString(30300)
-        TV_SHOWS = self.getString(30301)
-        MOVIES_BY_GENRES = self.getString(30302)
-        MOVIES_RECENTLY_ADDED = self.getString(30305)
-        MOVIES_BY_YEAR = self.getString(30311)
         if 'action' in params.keys():
             icon = os.path.join(self.addon.getAddonInfo('path'), 'icon.png')
             if params['action'] == 'remove-subscription':

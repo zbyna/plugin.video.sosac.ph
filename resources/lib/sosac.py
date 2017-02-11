@@ -32,8 +32,8 @@ import util
 from provider import ContentProvider, cached, ResolveException
 import xbmc
 import xbmcgui
-from audioop import reverse
-from string import letters
+
+from translatedStrings import *
 
 sys.setrecursionlimit(10000)
 
@@ -46,10 +46,7 @@ ISO_639_1_CZECH = "cs"
 # JSONs
 URL = "http://tv.sosac.to"
 SUBSCRIPTION_MANAGER = "subscription_manager"
-ADD_TO_LIBRARY = ""
-REMOVE_FROM_SUBSCRIPTION = ""
-ADD_ALL_TO_LIBRARY = ""
-SUBSCRIBE = ""
+
 J_MOVIES_GENRE = "/vystupy5981/souboryzanry.json"
 J_MOVIES_MOST_POPULAR = "/vystupy5981/moviesmostpopular.json"
 J_MOVIES_RECENTLY_ADDED = "/vystupy5981/moviesrecentlyadded.json"
@@ -94,17 +91,7 @@ class SosacContentProvider(ContentProvider):
         return ['resolve', 'categories', 'search']
 
     def categories(self):
-        MOVIES = self.parent.getString(30300)
-        TV_SHOWS = self.parent.getString(30301)
-        MOVIES_BY_GENRES = self.parent.getString(30302)
-        MOVIES_MOST_POPULAR = self.parent.getString(30303)
-        TV_SHOWS_MOST_POPULAR = self.parent.getString(30304)
-        MOVIES_RECENTLY_ADDED = self.parent.getString(30305)
-        TV_SHOWS_RECENTLY_ADDED = self.parent.getString(30306)
-        ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
-        SPRAVCE_ODBERU = self.parent.getString(30310)
-        MOVIES_BY_YEAR = self.parent.getString(30311)
-        REMOVE_ALL_FROM_SUBSCRIPTION = self.parent.getString(30313)
+        
         result = []
         for title, url in [
                 (MOVIES, URL + J_MOVIES_A_TO_Z_TYPE),
@@ -155,14 +142,7 @@ class SosacContentProvider(ContentProvider):
         return url.replace(TV_SHOW_FLAG, "", 1)
 
     def list(self, url):
-        global ADD_TO_LIBRARY
-        ADD_TO_LIBRARY = self.parent.getString(30308)
-        global REMOVE_FROM_SUBSCRIPTION
-        REMOVE_FROM_SUBSCRIPTION = self.parent.getString(30309)
-        global ADD_ALL_TO_LIBRARY
-        ADD_ALL_TO_LIBRARY = self.parent.getString(30307)
-        global SUBSCRIBE
-        SUBSCRIBE = self.parent.getString(30312)
+        
         util.info("Examining url " + url)
         if J_MOVIES_A_TO_Z_TYPE in url:
             return self.load_json_list(url)
@@ -285,7 +265,6 @@ class SosacContentProvider(ContentProvider):
         return result
      
     def list_by_year(self, url):
-        MOVIES_BY_YEAR = self.parent.getString(30311)
         if "?" + YEAR_PARAM in url:
             return self.list_year(url)
         else:
@@ -453,7 +432,6 @@ class SosacContentProvider(ContentProvider):
 #        self.parent.dialog.close()
 
     def library_tvshows_all_xml(self):
-        SUBSCRIBE_ALL_TV_SHOWS = self.parent.getString(30314)
         page = util.request('http://tv.prehraj.me/serialyxml.php')
         data = util.substr(page, '<select name=\"serialy\">', '</select>')
         items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
