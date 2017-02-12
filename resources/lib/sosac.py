@@ -142,7 +142,6 @@ class SosacContentProvider(ContentProvider):
         return url.replace(TV_SHOW_FLAG, "", 1)
 
     def list(self, url):
-        
         util.info("Examining url " + url)
         if J_MOVIES_A_TO_Z_TYPE in url:
             return self.load_json_list(url)
@@ -178,30 +177,34 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
 
         return sorted(result, key=lambda i: i['title'])
+       
+    def list_videos_create(self,videoArray):
+        result = []
+        for video in videoArray:
+              item = self.video_item()
+              namePom = self.get_video_name(video)
+              item['title'] = namePom
+              item['img'] = IMAGE_MOVIE + video['i']
+              urlPom = video['l'] if video['l'] else ""
+              item['url'] = urlPom
+              if RATING in video:
+                  item['rating'] = video[RATING]
+              if LANG in video:
+                  item['lang'] = video[LANG]
+              if QUALITY in video:
+                  item['quality'] = video[QUALITY]
+              item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
+                                 { 'url': urlPom,
+                                   'action': 'add-to-library',
+                                   'name': namePom }}
+              result.append(item)
+        return result
+      
 
     def list_videos(self, url):
-        result = []
         data = util.request(url)
         json_video_array = json.loads(data)
-        for video in json_video_array:
-            item = self.video_item()
-            namePom = self.get_video_name(video)
-            item['title'] = namePom
-            item['img'] = IMAGE_MOVIE + video['i']
-            urlPom = video['l'] if video['l'] else ""
-            item['url'] = urlPom
-            if RATING in video:
-                item['rating'] = video[RATING]
-            if LANG in video:
-                item['lang'] = video[LANG]
-            if QUALITY in video:
-                item['quality'] = video[QUALITY]
-            item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
-                               { 'url': urlPom,
-                                 'action': 'add-to-library',
-                                 'name': namePom }}
-            result.append(item)
-        return result
+        return self.list_videos_create(json_video_array)
 
     def list_series_letter(self, url):
         result = []
@@ -256,25 +259,7 @@ class SosacContentProvider(ContentProvider):
         data = self.all_movies_with_key('y')
         year = url.split('=')
         json_video_array = data[year[1]]
-        for video in json_video_array:
-            item = self.video_item()
-            namePom = self.get_video_name(video)
-            item['title'] = namePom
-            item['img'] = IMAGE_MOVIE + video['i']
-            urlPom = video['l'] if video['l'] else ""
-            item['url'] = urlPom
-            if RATING in video:
-                item['rating'] = video[RATING]
-            if LANG in video:
-                item['lang'] = video[LANG]
-            if QUALITY in video:
-                item['quality'] = video[QUALITY]
-            item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
-                               { 'url': urlPom,
-                                 'action': 'add-to-library',
-                                 'name': namePom }}
-            result.append(item)
-        return result
+        return self.list_videos_create(json_video_array)
      
     def list_by_year(self, url):
         if "?" + YEAR_PARAM in url:
