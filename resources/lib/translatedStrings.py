@@ -3,6 +3,9 @@ import xbmcaddon
 __scriptid__ = 'plugin.video.sosac.ph'
 __addon__ = xbmcaddon.Addon(id=__scriptid__)
 
+# strings used in sosac.py nad sutils.py
+LIBRARY_TYPE_VIDEO = "video"
+LIBRARY_TYPE_TVSHOW = "tvshow"
 # playing from restored position
 POKRACOVAT = __addon__.getLocalizedString(30208)
 OD_ZACATKU = __addon__.getLocalizedString(30209)

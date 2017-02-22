@@ -27,12 +27,12 @@ import urllib2
 import cookielib
 import sys
 import json
-
 import util
 from provider import ContentProvider, cached, ResolveException
 import xbmc
 import xbmcgui
-
+import concurrent.futures
+import time
 from translatedStrings import *
 
 sys.setrecursionlimit(10000)
@@ -91,7 +91,6 @@ class SosacContentProvider(ContentProvider):
         return ['resolve', 'categories', 'search']
 
     def categories(self):
-        
         result = []
         for title, url in [
                 (MOVIES, URL + J_MOVIES_A_TO_Z_TYPE),
@@ -106,7 +105,7 @@ class SosacContentProvider(ContentProvider):
             item = self.dir_item(title=title, url=url)
             if title == MOVIES or title == TV_SHOWS or title == MOVIES_RECENTLY_ADDED:
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
-                    'action': 'add-all-to-library', 'title': title}}
+                    'action': 'add-all-to-library', 'title': title, 'url':url}}
             if title == SPRAVCE_ODBERU:
                 item['menu'] = {"[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
                     'action': 'remove-all-from-subscription', 'title': title}}
@@ -116,7 +115,7 @@ class SosacContentProvider(ContentProvider):
     def search(self, keyword):
         if len(keyword) < 3 or len(keyword) > 100:
             return [self.dir_item(title="Search query must be between 3 and 100 characters long!", url="fail")]
-        return self.list_search(URL + J_SEARCH + urllib.quote_plus(keyword))
+        return self.list_videos(URL + J_SEARCH + urllib.quote_plus(keyword))
 
     def a_to_z(self, url):
         result = []
@@ -128,18 +127,11 @@ class SosacContentProvider(ContentProvider):
         return result
 
     @staticmethod
-    def remove_flag_from_url(url, flag):
-        return url.replace(flag, "", count=1)
-
-    @staticmethod
     def particular_letter(url):
         return "a-z/" in url
 
     def has_tv_show_flag(self, url):
         return TV_SHOW_FLAG in url
-
-    def remove_flags(self, url):
-        return url.replace(TV_SHOW_FLAG, "", 1)
 
     def list(self, url):
         util.info("Examining url " + url)
@@ -172,10 +164,14 @@ class SosacContentProvider(ContentProvider):
         data = util.request(url)
         json_list = json.loads(data)
         for key, value in json_list.iteritems():
-            item = self.dir_item(title=self.upper_first_letter(key))
+            item = self.dir_item(title=key.title())
             item['url'] = value
             result.append(item)
-
+            item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]":
+                                 {'action': 'add-all-to-library',
+                                  'title': MOVIES_BY_GENRES,
+                                  'url' : value}
+                                  }
         return sorted(result, key=lambda i: i['title'])
        
     def list_videos_create(self,videoArray):
@@ -196,62 +192,112 @@ class SosacContentProvider(ContentProvider):
               item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
                                  { 'url': urlPom,
                                    'action': 'add-to-library',
-                                   'name': namePom }}
+                                   'name': self.get_library_video_name(video),
+                                   'type':LIBRARY_TYPE_VIDEO }}
               result.append(item)
         return result
       
-
     def list_videos(self, url):
         data = util.request(url)
         json_video_array = json.loads(data)
         return self.list_videos_create(json_video_array)
-
-    def list_series_letter(self, url):
+       
+    def list_series_create(self,json_series_array):
         result = []
-        data = util.request(url)
-        json_list = json.loads(data)
-        for serial in json_list:
+        i=0
+        for serial in json_series_array:
             item = self.dir_item()
             item['title'] = self.get_localized_name(serial['n'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
-            result.append(item)
+            subs = self.get_subs()
+            if item['url'] in subs:
+                      item['menu'] = {
+                          "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                              'url': item['url'],
+                              'action': 'remove-subscription',
+                              'name': self.get_library_video_name(serial)
+                          }
+                      }
+                      item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
+                      result.insert(i, item)
+                      i += 1
+            else:
+                item['menu'] = {
+                    "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                        'url': item['url'],
+                        'action': 'add-to-library',
+                        'name': self.get_library_video_name(serial),
+                        'type': LIBRARY_TYPE_TVSHOW
+                    },
+                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                        'url': item['url'],
+                        'action': 'add-subscription',
+                        'name': self.get_library_video_name(serial)
+                    }
+                }
+                result.append(item)
         return result
+
+    def list_series_letter(self, url):
+        data = util.request(url)
+        json_series_array = json.loads(data)
+        return self.list_series_create(json_series_array)
     
-    @staticmethod
-    def all_tvshows_with_key(keyForDict):
+    def time_usage(func):
+        def wrapper(*args, **kwargs):
+            beg_ts = time.time()
+            retval = func(*args, **kwargs)
+            end_ts = time.time()
+            util.info("elapsed time: %f" % (end_ts - beg_ts))
+            return retval
+        return wrapper   
+    
+    def all_videos(self):
+        seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+            pom = {executor.submit(util.request, seznam[item]) : item for item in seznam}
+            #util.info(str(pom))
+            for pp  in concurrent.futures.as_completed(pom):
+                for p in json.loads(pp.result()):
+                    yield p     
+    
+    def all_tvshows(self):
+        seznam = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
+                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
+            pom = executor.map(util.request, (URL + J_TV_SHOWS + item+ ".json"
+                                               for item in seznam),timeout=5)
+            for pp  in pom:
+                for p in json.loads(pp):
+                    yield p
+    
+    def all_tvshows_with_key(self,keyForDict):
         # =======================================================================================
         # Downloads all json for individual letters
         # and creates {keyForDict : [ {tvshows} ]} from them so that
         # movies in list contain keyForDict
         # =======================================================================================
         result = {}
-        for l in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
-                       'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
-            pom = json.loads(util.request(URL + J_TV_SHOWS + l + ".json"))
-            for p in pom:
-              if p[keyForDict] in result:
-                result[p[keyForDict]].append(p)
-              else:
-                result[p[keyForDict]] = [p]
+        for p in self.all_tvshows():
+            if p[keyForDict] in result:
+              result[p[keyForDict]].append(p)
+            else:
+              result[p[keyForDict]] = [p]
         return result
        
-    @staticmethod
-    def all_movies_with_key(keyForDict):
+    def all_movies_with_key(self,keyForDict):
         # =======================================================================================
         # Downloads all json for individual letters
         # and creates {keyForDict : [ {movies} ]} from them so that
         # movies in list contain keyForDict
         # =======================================================================================
         result = {}
-        seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
-        for letter in seznam :
-            pom = json.loads(util.request(seznam[letter]))
-            for p in pom:
-              if p[keyForDict] in result:
-                result[p[keyForDict]].append(p)
-              else:
-                result[p[keyForDict]] = [p]
+        for p in self.all_videos():
+            if p[keyForDict] in result:
+              result[p[keyForDict]].append(p)
+            else:
+              result[p[keyForDict]] = [p]
         return result
     
     def list_year(self,url):
@@ -271,7 +317,9 @@ class SosacContentProvider(ContentProvider):
                 urlPom = url + "?" + YEAR_PARAM + "=" + s
                 item = {'url': urlPom, 'title': s, 'type': 'dir'}
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
-                    'action': 'add-all-to-library', 'title': MOVIES_BY_YEAR, 'url': urlPom}}
+                                'action': 'add-all-to-library',
+                                'title': MOVIES_BY_YEAR,
+                                'url': urlPom}}
                 self._filter(result, item)
             return result
 
@@ -284,7 +332,8 @@ class SosacContentProvider(ContentProvider):
                 for episode_key, video in episode.iteritems():
                     item = self.video_item()
                     item['title'] = series_key + "x" + episode_key + " - " + video['n']
-                    item['img'] = IMAGE_EPISODE + video['i']
+                    if video['i'] is not None:
+                        item['img'] = IMAGE_EPISODE + video['i']
                     item['url'] = video['l'] if video['l'] else ""
                     result.append(item)
         if not self.reverse_eps:
@@ -308,6 +357,11 @@ class SosacContentProvider(ContentProvider):
         year = (" (" + video['y'] + ") ") if video['y'] else " "
         quality = ("- " + video[QUALITY].upper()) if video[QUALITY] else ""
         return name + year + quality
+    
+    def get_library_video_name(self, video):
+        name = self.get_localized_name(video['n'])
+        year = (" (" + video['y'] + ") ") if video['y'] else " "
+        return (name + year).encode('utf-8')
 
     def get_episode_recently_name(self, episode):
         serial = self.get_localized_name(episode['t']) + ' '
@@ -316,225 +370,61 @@ class SosacContentProvider(ContentProvider):
         name = self.get_localized_name(episode['n'])
         return serial + series + number + name
 
-    def add_video_flag(self, items):
-        flagged_items = []
-        for item in items:
-            flagged_item = self.video_item()
-            flagged_item.update(item)
-            flagged_items.append(flagged_item)
-        return flagged_items
-
-    def add_directory_flag(self, items):
-        flagged_items = []
-        for item in items:
-            flagged_item = self.dir_item()
-            flagged_item.update(item)
-            flagged_items.append(flagged_item)
-        return flagged_items
-
     def get_localized_name(self, names):
         return (names[self.ISO_639_1_CZECH]
                 if self.ISO_639_1_CZECH in names else names[ISO_639_1_CZECH])
-
+    
     @cached(ttl=24)
-    def get_data_cached(self, url):
-        return util.request(url)
-
-    def library_movies_all_xml(self):
-        page = util.request('http://tv.prehraj.me/filmyxml.php')
-        pagedata = util.substr(page, '<select name=\"rok\">', '</select>')
-        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
-                                pagedata, re.IGNORECASE | re.DOTALL)
-        pagetotal = float(len(list(pageitems)))
-        pageitems = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>',
-                                pagedata, re.IGNORECASE | re.DOTALL)
-        util.info("PocetRoku: %d" % pagetotal)
-        pagenum = 0
-        for m in pageitems:
-            pagenum += 1
-            if self.parent.dialog.iscanceled():
-                return
-            pageperc = float(pagenum / pagetotal) * 100
-            util.info("Rokpercento: %d" % int(pageperc))
-            data = util.request('http://tv.prehraj.me/filmyxml.php?rok=' +
-                                m.group('url') + '&sirka=670&vyska=377&affid=0#')
-            tree = ET.fromstring(data)
-            total = float(len(list(tree.findall('film'))))
-            util.info("TOTAL: %d" % total)
-            num = 0
-            for film in tree.findall('film'):
-                num += 1
-                perc = float(num / total) * 100
-                util.info("percento: %d" % int(perc))
-                if self.parent.dialog.iscanceled():
+    def get_data_cached(self,url):
+        return util.request(url)   
+      
+    def add_to_library_decorator(func):
+        def wrapper(*args, **kwargs):
+            pomSeznam,question,libraryType = func(*args, **kwargs)
+            total = len(pomSeznam)
+            for i, video in enumerate(pomSeznam):
+                item = video['menu']['[B][COLOR red]' + ADD_TO_LIBRARY + '[/COLOR][/B]']
+                item["update"] = True
+                item["notify"] = True
+                item["type"] = libraryType
+                args[0].parent.add_item(item,question)
+                procento = int(float(i) / total  * 100)
+                args[0].parent.dialog.update(procento,video['title'])
+                if args[0].parent.dialog.iscanceled():
                     return
-                item = self.video_item()
-                try:
-                    if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                        title = film.findtext('nazevcs').encode('utf-8')
-                    else:
-                        title = film.findtext('nazeven').encode('utf-8')
-                    self.parent.dialog.update(int(perc), str(pagenum) + '/' + str(int(pagetotal)) +
-                                              ' [' + m.group('url') + '] ->  ' + title)
-                    item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                    item['name'] = item['title']
-                    item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                        'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                    item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                        'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-                    item['update'] = True
-                    item['notify'] = False
-                    self.parent.add_item(item)
-                except Exception as e:
-                    util.error("ERR TITLE: " + item['title'] + " | " + str(e))
-                    pass
-#        self.parent.dialog.close()
-
-    def library_movie_recently_added_xml(self):
-        data = util.request(
-            'http://tv.prehraj.me/filmyxml2.php?limit=200&sirka=670&vyska=377&affid=0#')
-        tree = ET.fromstring(data)
-        total = float(len(list(tree.findall('film'))))
-        util.info("TOTAL: %d" % total)
-        num = 0
-        for film in tree.findall('film'):
-            num += 1
-            perc = float(num / total) * 100
-            util.info("percento: %d" % int(perc))
-            if self.parent.dialog.iscanceled():
-                return
-            self.parent.dialog.update(int(perc), film.findtext('nazevcs') + ' (' +
-                                      film.findtext('rokvydani') + ')\n' +
-                                      film.findtext('nazeven') + ' (' +
-                                      film.findtext('rokvydani') + ')\n\n\n')
-            item = self.video_item()
-            try:
-                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                    title = film.findtext('nazevcs').encode('utf-8')
-                else:
-                    title = film.findtext('nazeven').encode('utf-8')
-                item['title'] = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['name'] = item['title']
-                item['url'] = 'http://movies.prehraj.me/' + self.ISO_639_1_CZECH + \
-                    'player/' + self.parent.make_name(title + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': item['title']}}
-                item['update'] = True
-                item['notify'] = False
-                self.parent.add_item(item)
-                # print("TITLE: ", item['title'])
-            except Exception as e:
-                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
-                pass
-#        self.parent.dialog.close()
-
-    def library_tvshows_all_xml(self):
-        page = util.request('http://tv.prehraj.me/serialyxml.php')
-        data = util.substr(page, '<select name=\"serialy\">', '</select>')
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        total = float(len(list(items)))
-        items = re.finditer('<option value=\"(?P<url>[^\"]+)\">(?P<name>[^<]+)</option>', data,
-                            re.IGNORECASE | re.DOTALL)
-        util.info("Pocet: %d" % total)
+        return wrapper
+    
+    @add_to_library_decorator
+    def movies_all_to_library(self):
+        result = [] 
+        for item in self.all_videos():
+            result.append(item)
+        return (self.list_videos_create(result),False,LIBRARY_TYPE_VIDEO)
+    
+    @add_to_library_decorator
+    def tvshows_all_to_library(self):
+        result = [] 
         dialog = xbmcgui.Dialog()
         question = dialog.yesno(SUBSCRIBE_ALL_TV_SHOWS, '')
-        num = 0
-        for m in items:
-            num += 1
-            if self.parent.dialog.iscanceled():
-                return
-            perc = float(num / total) * 100
-            util.info("percento: %d" % int(perc))
-            self.parent.dialog.update(int(perc), m.group('name'))
-            item = {'url': 'http://tv.prehraj.me/cs/detail/' + m.group('url'),
-                    'action': 'add-to-library', 'name': m.group('name'), 'update': True,
-                    'notify': True}
-            self.parent.add_item(item, question)
-        util.info("done....")
-
+        del dialog
+        for item in self.all_tvshows():
+            result.append(item)
+        return (self.list_series_create(result),question,LIBRARY_TYPE_TVSHOW)
+    
+    @add_to_library_decorator
+    def list_to_library(self,url):
+        return (self.list_videos(url),False,LIBRARY_TYPE_VIDEO)
+    
+    @add_to_library_decorator
+    def generated_list_to_library(self, url):
+        return (self.list_year(url),False,LIBRARY_TYPE_VIDEO)
+    
     def subscription_manager_tvshows_all_xml(self):
         shows = []
-        for l in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
-                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
-            items = json.loads(util.request(URL + J_TV_SHOWS + l + ".json"))
-            i = 0
-            subs = self.get_subs()
-            for serial in items:
-                flag_item = self.dir_item()
-                urlPom = serial['l']
-                namePom = self.get_localized_name(serial['n'])
-                imgPom = IMAGE_SERIES + serial['i']
-                flag_item = {'url': urlPom,
-                             'action': 'add-to-library', 'title': namePom, 'update': True,
-                             'notify': True, 'type': 'dir', 'size': '0','img':imgPom}
-                if flag_item['url'] in subs:
-                    flag_item['menu'] = {
-                        "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
-                            'url': urlPom,
-                            'action': 'remove-subscription', 'name': namePom
-                        }
-                    }
-                    flag_item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + flag_item['title']
-                    shows.insert(i, flag_item)
-                    i += 1
-                else:
-                    flag_item['menu'] = {
-                        "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                            'url': urlPom,
-                            'action': 'add-to-library',
-                            'name': namePom
-                        },
-                        "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
-                            'url': urlPom,
-                            'action': 'add-subscription',
-                            'name': namePom
-                        }
-                    }
-                    shows.append(flag_item)
-        return shows
-
-    def list_xml_letter_to_library(self, url):
-        result = []
-        data = util.request(url)
-        tree = ET.fromstring(data)
-        total = float(len(tree.findall('film')))
         i = 0
-        for film in tree.findall('film'):
-            i += 1
-            item = self.video_item()
-            try:
-                if ISO_639_1_CZECH in self.ISO_639_1_CZECH:
-                    title = film.findtext('nazevcs').encode('utf-8')
-                else:
-                    title = film.findtext('nazeven').encode('utf-8')
-                basetitle = '%s (%s)' % (title, film.findtext('rokvydani'))
-                item['title'] = '%s' % (basetitle)
-                item['name'] = item['title']
-                item['url'] = self.base_url + '/player/' + self.parent.make_name(
-                    film.findtext('nazeven').encode('utf-8') + '-' + film.findtext('rokvydani'))
-                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
-                    'url': item['url'], 'action': 'add-to-library', 'name': basetitle}}
-                item['update'] = True
-                item['notify'] = False
-                procenta = (i / total) * 100
-                self.parent.dialog.update(int(procenta), item['title'])
-                self.parent.add_item(item)
-            except Exception as e:
-                util.error("ERR TITLE: " + item['title'] + " | " + str(e))
-                pass
-
-    def add_flag_to_url(self, item, flag):
-        item['url'] = flag + item['url']
-        return item
-
-    def add_url_flag_to_items(self, items, flag):
-        subs = self.get_subs()
-        for item in items:
-            if item['url'] in subs:
-                item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
-            self.add_flag_to_url(item, flag)
-        return items
+        for serial in self.all_tvshows():
+            shows.append(serial)
+        return self.list_series_create(shows)
 
     def _url(self, url):
         # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte
@@ -543,18 +433,6 @@ class SosacContentProvider(ContentProvider):
             return url
         else:
             return self.base_url + "/" + url.lstrip('./')
-
-    def list_tv_shows_by_letter(self, url):
-        util.info("Getting shows by letter " + url)
-        shows = self.list_by_letter(url)
-        util.info("Resolved shows " + str(shows))
-        shows = self.add_directory_flag(shows)
-        return self.add_url_flag_to_items(shows, TV_SHOW_FLAG)
-
-    def list_movies_by_letter(self, url):
-        movies = self.list_by_letter(url)
-        util.info("Resolved movies " + str(movies))
-        return self.add_video_flag(movies)
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
         data = item['url']
@@ -568,9 +446,3 @@ class SosacContentProvider(ContentProvider):
 
     def get_subs(self):
         return self.parent.get_subs()
-
-    def list_search(self, url):
-        return self.list_videos(url)
-
-    def upper_first_letter(self, name):
-        return name[:1].upper() + name[1:]
