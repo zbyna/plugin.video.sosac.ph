@@ -478,9 +478,17 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 return False
             if params['action'] == 'add-subscription':
                 subs = self.get_subs()
-                subs.update({params['url']: params['name']})
+                if not 'refresh' in params:
+                    params['refresh'] = str(self.getSetting("refresh_time"))
+                sub = {'name': params['name'],
+                       'refresh': params['refresh'],
+                       'type': params['type']}
+                sub['last_run'] = time.time()
+                subs.update({params['url']: sub})
                 self.set_subs(subs)
                 xbmc.executebuiltin('Container.Refresh')
+            if params['action'] == 'clear_cache':
+                self.cache.delete('%')
         return False
 
     def add_item_to_library(self, item_path, item_url):

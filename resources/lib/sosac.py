@@ -235,7 +235,8 @@ class SosacContentProvider(ContentProvider):
                     "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
                         'url': item['url'],
                         'action': 'add-subscription',
-                        'name': self.get_library_video_name(serial)
+                        'name': self.get_library_video_name(serial),
+                        'type': LIBRARY_TYPE_TVSHOW
                     }
                 }
                 result.append(item)
