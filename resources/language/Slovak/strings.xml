@@ -65,4 +65,11 @@
   <string id="30314">Prihlásiť všetky seriály na odber?</string>
   <string id="30315">Cache</string>
   <string id="30316">Vyprázdniť cache</string>
+  <string id="30317">[B]Rebríčky[/B]</string>
+  <string id="30318">[B]Ocenenie[/B]</string>
+  <string id="30319">[B]Najlepšie filmy[/B]</string>
+  <string id="30320">[B]Najlepšie filmy podľa žánrov[/B]</string>
+  <string id="30321">[B]Najlepšie seriály[/B]</string>
+  <string id="30322">[B]Najlepšie seriály podľa žánrov[/B]</string>
+  <string id="30323">[B]Rebríčky a ocenenie (csfd)[/B]</string>
 </strings>

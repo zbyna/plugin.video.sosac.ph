@@ -65,4 +65,11 @@
     <string id="30314">Subscribe all TV Shows?</string>
     <string id="30315">Cache</string>
     <string id="30316">Flush cache</string>
+    <string id="30317">[B]Ladders[/B]</string>
+    <string id="30318">[B]Awards[/B]</string>
+    <string id="30319">[B]Best Movies[/B]</string>
+    <string id="30320">[B]Best Movies by Genres[/B]</string>
+    <string id="30321">[B]Best TV Shows[/B]</string>
+    <string id="30322">[B]Best TV Shows by Genres[/B]</string>
+    <string id="30323">[B]Ladders and Awards (csfd)[/B]</string>
 </strings>

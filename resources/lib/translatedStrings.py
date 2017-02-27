@@ -3,6 +3,16 @@ import xbmcaddon
 __scriptid__ = 'plugin.video.sosac.ph'
 __addon__ = xbmcaddon.Addon(id=__scriptid__)
 
+CSFD_BASE = 'http://www.csfd.cz/'
+ZEBRICKY_FILMY_NEJ = 'zebricky/nejlepsi-filmy/?show=complete'
+ZEBRICKY_SPEC = 'zebricky/specificky-vyber/'
+ZEBRICKY_FILMY_SPEC = (ZEBRICKY_SPEC + 
+'?type=0&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
+ZEBRICKY_TVSHOW_NEJ = 'zebricky/nejlepsi-serialy/?show=complete'
+ZEBRICKY_TVSHOW_SPEC = (ZEBRICKY_SPEC +
+'?type=3&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
+ZEBRICKY_FILMY_SPEC_GENRE = 'type=0'
+ZEBRICKY_TVSHOW_SPEC_GENRE = 'type=3'
 # strings used in sosac.py nad sutils.py
 LIBRARY_TYPE_VIDEO = "video"
 LIBRARY_TYPE_TVSHOW = "tvshow"
@@ -20,6 +30,13 @@ MOVIES_RECENTLY_ADDED = __addon__.getLocalizedString(30305)
 TV_SHOWS_RECENTLY_ADDED = __addon__.getLocalizedString(30306)
 SPRAVCE_ODBERU = __addon__.getLocalizedString(30310)
 MOVIES_BY_YEAR = __addon__.getLocalizedString(30311)
+CSFD_MAIN = __addon__.getLocalizedString(30323)
+CSFD_LADDERS = __addon__.getLocalizedString(30317)
+CSFD_AWARDS = __addon__.getLocalizedString(30318)
+BEST_MOVIES = __addon__.getLocalizedString(30319)
+BEST_MOVIES_BY_GENRE = __addon__.getLocalizedString(30320)
+BEST_TV_SHOWS = __addon__.getLocalizedString(30321)
+BEST_TV_SHOWS_BY_GENRE = __addon__.getLocalizedString(30322)
 # context menu items 
 ADD_ALL_TO_LIBRARY = __addon__.getLocalizedString(30307)
 ADD_TO_LIBRARY = __addon__.getLocalizedString(30308)

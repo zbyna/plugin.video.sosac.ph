@@ -34,6 +34,10 @@ import xbmcgui
 import concurrent.futures
 import time
 from translatedStrings import *
+from csfd import csfd
+from bs4 import BeautifulSoup
+import requests
+import itertools
 
 sys.setrecursionlimit(10000)
 
@@ -67,6 +71,8 @@ IMAGE_EPISODE = URL
 RATING = 'r'
 LANG = 'd'
 QUALITY = 'q'
+
+
 
 
 class SosacContentProvider(ContentProvider):
@@ -103,6 +109,7 @@ class SosacContentProvider(ContentProvider):
                 (TV_SHOWS_MOST_POPULAR, URL + J_TV_SHOWS_MOST_POPULAR),
                 (MOVIES_RECENTLY_ADDED, URL + J_MOVIES_RECENTLY_ADDED),
                 (TV_SHOWS_RECENTLY_ADDED, URL + J_TV_SHOWS_RECENTLY_ADDED),
+                (CSFD_MAIN,CSFD_BASE + 'level_0'),
                 (SPRAVCE_ODBERU, SUBSCRIPTION_MANAGER)]:
             item = self.dir_item(title=title, url=url)
             if title == MOVIES or title == TV_SHOWS or title == MOVIES_RECENTLY_ADDED:
@@ -159,6 +166,8 @@ class SosacContentProvider(ContentProvider):
             return self.list_recentlyadded_episodes(url)
         if SUBSCRIPTION_MANAGER in url:
             return self.subscription_manager_tvshows_all_xml()
+        if CSFD_BASE in url:
+            return self.csfd_lists(url)
         return self.list_videos(url)
 
     def load_json_list(self, url):
@@ -212,6 +221,8 @@ class SosacContentProvider(ContentProvider):
             item['title'] = self.get_localized_name(serial['n'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
+            if RATING in serial:
+                  item['rating'] = serial[RATING]
             subs = self.get_subs()
             if item['url'] in subs:
                       item['menu'] = {
@@ -252,9 +263,10 @@ class SosacContentProvider(ContentProvider):
             beg_ts = time.time()
             retval = func(*args, **kwargs)
             end_ts = time.time()
-            util.info("elapsed time: %f" % (end_ts - beg_ts))
+            util.info('"%s" - elapsed time: %f' % (func.__name__ ,end_ts - beg_ts))
             return retval
-        return wrapper   
+        return wrapper 
+      
     
     def all_videos(self):
         seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
@@ -288,7 +300,8 @@ class SosacContentProvider(ContentProvider):
             else:
               result[p[keyForDict]] = [p]
         return result
-       
+    
+    
     def all_movies_with_key(self,keyForDict):
         # =======================================================================================
         # Downloads all json for individual letters
@@ -428,6 +441,91 @@ class SosacContentProvider(ContentProvider):
         for serial in self.all_tvshows():
             shows.append(serial)
         return self.list_series_create(shows)
+    
+    def prepare_dirs(self,menuItems):
+        #========================================================================================
+        # prepares dirs according to csfd.py for showing in Kodi
+        #========================================================================================
+        result = []
+        for di in menuItems:
+            item = self.dir_item(title=di['name'])  
+            item['url'] = di['url']
+            result.append(item)
+        return result
+    
+
+    def extract_info(self, url, itemType):
+        #========================================================================================
+        # extracts 'film' or 'tvseries' info from <table class="content ui-table-list striped">
+        #========================================================================================
+        stranka = requests.get(url)
+        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        tabulka = polivka.find('table', class_="content ui-table-list striped")
+        filmy = [film.get_text() for film in tabulka.findAll('td', class_='film')]
+        hodnoceni = [prumer.get_text() for 
+            prumer in tabulka.findAll('td', class_='average')]
+        idFilmu = [film.get('id') for film in tabulka.findAll('td', class_='film')]
+        if itemType == 'film':
+            indexFilms = self.all_movies_with_key('c')
+        else:
+            indexFilms = self.all_tvshows_with_key('c')
+        result = []
+        for idf, fil, hod in itertools.izip(idFilmu, filmy, hodnoceni):
+            id = idf.split('-')[1]
+            rating = float(hod.replace(',', '.').replace('%', '')) / 10
+            if indexFilms.get(id, None):
+                indexFilms[id][0]['r'] = rating
+                result.append(indexFilms[id][0])
+            else:
+                neni = u' Není na sosáči'
+                nothing = ' Not available in Sosac'
+                result.append({"q":"", "i":"", 
+                               "n":{"cs":''.join(['[COLOR red]', fil, neni,"[/COLOR]"]),
+                                    "en":''.join(['[COLOR red]', fil, nothing,"[/COLOR]"])},
+                               "s":[], "d":[], "y":'', "c":"", "m":"",
+                               "r":rating, "g":[], "l":""})
+        return result
+
+
+    def extract_info_genres(self, url, ZEBRICKY_items_SPEC):
+        stranka = requests.get(url)
+        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        tabulka = polivka.find('select', attrs={'name':'genre'})
+        genres = [(genre.get_text(), genre['value']) for 
+            genre in tabulka.findAll('option')]
+        genres.remove((u'-všechny-', u''))
+        items = []
+        for name, kod in genres:
+            urlPom = ZEBRICKY_items_SPEC.replace('genre=', ''.join(['genre=', kod]))
+            items.append({'url':CSFD_BASE + urlPom + '&show=complete',
+                          'name':name.encode('utf8')})
+        return items
+
+    def csfd_lists(self,url):
+        if 'level_0' in url:
+            return self.prepare_dirs(csfd['level_0'])
+        if 'zebricky/' in url:
+            if 'level_1' in url:
+                return self.prepare_dirs(csfd['level_0'][0]['level_1'])
+            if ZEBRICKY_FILMY_NEJ in url:
+                result = self.extract_info(url,'film')
+                return self.list_videos_create(result)
+            if ZEBRICKY_TVSHOW_NEJ in url:
+                result = self.extract_info(url, 'tvshow')
+                return self.list_series_create(result)
+            if ZEBRICKY_FILMY_SPEC in url:
+                result = self.extract_info_genres(url, ZEBRICKY_FILMY_SPEC)
+                return self.prepare_dirs(result)
+            if ZEBRICKY_TVSHOW_SPEC in url:
+                result = self.extract_info_genres(url, ZEBRICKY_TVSHOW_SPEC)
+                return self.prepare_dirs(result)
+            if ZEBRICKY_FILMY_SPEC_GENRE in url:
+                result = self.extract_info(url,'film')
+                return self.list_videos_create(result)
+            if ZEBRICKY_TVSHOW_SPEC_GENRE in url:
+                result = self.extract_info(url, 'tvshow')
+                return self.list_series_create(result)
+                
 
     def _url(self, url):
         # DirtyFix nefunkcniho downloadu: Neznam kod tak se toho zkusenejsi chopte
