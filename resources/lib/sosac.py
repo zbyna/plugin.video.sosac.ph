@@ -38,6 +38,7 @@ from csfd import csfd
 from bs4 import BeautifulSoup
 import requests
 import itertools
+import simplecache
 
 sys.setrecursionlimit(10000)
 
@@ -87,6 +88,7 @@ class SosacContentProvider(ContentProvider):
         urllib2.install_opener(opener)
         self.reverse_eps = reverse_eps
         self.force_english = force_english
+        self.cache = simplecache.SimpleCache()
 
     def on_init(self):
         if self.force_english:
@@ -271,8 +273,7 @@ class SosacContentProvider(ContentProvider):
     def all_videos(self):
         seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
         with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
-            pom = {executor.submit(util.request, seznam[item]) : item for item in seznam}
-            #util.info(str(pom))
+            pom = {executor.submit(self.get_data_cached, seznam[item]) : item for item in seznam}
             for pp  in concurrent.futures.as_completed(pom):
                 for p in json.loads(pp.result()):
                     yield p     
@@ -281,12 +282,14 @@ class SosacContentProvider(ContentProvider):
         seznam = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l', 'm',
                   'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
         with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
-            pom = executor.map(util.request, (URL + J_TV_SHOWS + item+ ".json"
+            pom = executor.map(self.get_data_cached, (URL + J_TV_SHOWS + item+ ".json"
                                                for item in seznam),timeout=5)
             for pp  in pom:
                 for p in json.loads(pp):
                     yield p
-    
+                    
+    #@time_usage
+    @simplecache.use_cache(cache_days=7)
     def all_tvshows_with_key(self,keyForDict):
         # =======================================================================================
         # Downloads all json for individual letters
@@ -301,7 +304,8 @@ class SosacContentProvider(ContentProvider):
               result[p[keyForDict]] = [p]
         return result
     
-    
+    #@time_usage
+    @simplecache.use_cache(cache_days=7)
     def all_movies_with_key(self,keyForDict):
         # =======================================================================================
         # Downloads all json for individual letters
@@ -390,9 +394,12 @@ class SosacContentProvider(ContentProvider):
         return (names[self.ISO_639_1_CZECH]
                 if self.ISO_639_1_CZECH in names else names[ISO_639_1_CZECH])
     
-    @cached(ttl=24)
+    #@cached(ttl=24)
+    @simplecache.use_cache(cache_days=3)
     def get_data_cached(self,url):
-        return util.request(url)   
+        return util.request(url) 
+    
+      
       
     def add_to_library_decorator(func):
         def wrapper(*args, **kwargs):
@@ -435,6 +442,7 @@ class SosacContentProvider(ContentProvider):
     def generated_list_to_library(self, url):
         return (self.list_year(url),False,LIBRARY_TYPE_VIDEO)
     
+    #@time_usage
     def subscription_manager_tvshows_all_xml(self):
         shows = []
         i = 0
