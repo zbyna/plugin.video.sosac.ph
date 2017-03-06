@@ -367,7 +367,8 @@ class SosacContentProvider(ContentProvider):
         for episode in json_series:
             item = self.video_item()
             item['title'] = self.get_episode_recently_name(episode)
-            item['img'] = IMAGE_EPISODE + episode['i']
+            if episode['i'] is not None:
+                item['img'] = IMAGE_EPISODE + episode['i']
             item['url'] = episode['l']
             result.append(item)
         return result
