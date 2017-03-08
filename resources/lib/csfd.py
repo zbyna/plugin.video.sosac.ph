@@ -32,7 +32,19 @@ csfd = {'level_0' :
                 {
                   'name': CSFD_AWARDS,
                   'url': CSFD_BASE +'oceneni/level_1',
-                  'type':'DIR'
+                  'type':'DIR',
+                  'level_1':[
+                                {
+                                    'name':OSCARS,
+                                    'url': CSFD_BASE + OCENENI_OSCAR,
+                                    'type':'DIR'},
+                                {
+                                    'name': GOLDEN_PALM,
+                                    'url':CSFD_BASE + OCENENI_ZLATA_PALMA,
+                                    'type':'DIR'
+                                },
+                                
+                            ]
                 }
             ]
         }

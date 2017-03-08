@@ -13,6 +13,10 @@ ZEBRICKY_TVSHOW_SPEC = (ZEBRICKY_SPEC +
 '?type=3&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
 ZEBRICKY_FILMY_SPEC_GENRE = 'type=0'
 ZEBRICKY_TVSHOW_SPEC_GENRE = 'type=3'
+OCENENI_OSCAR = 'oceneni/1-oscars/'
+OCENENI_OSCAR_ROKY = '?years='
+OCENENI_ZLATA_PALMA = 'oceneni/4-cannes-iff/'
+OCENENI_ZLATA_PALMA_ROKY = '?years='
 # strings used in sosac.py nad sutils.py
 LIBRARY_TYPE_VIDEO = "video"
 LIBRARY_TYPE_TVSHOW = "tvshow"
@@ -37,6 +41,8 @@ BEST_MOVIES = __addon__.getLocalizedString(30319)
 BEST_MOVIES_BY_GENRE = __addon__.getLocalizedString(30320)
 BEST_TV_SHOWS = __addon__.getLocalizedString(30321)
 BEST_TV_SHOWS_BY_GENRE = __addon__.getLocalizedString(30322)
+OSCARS = __addon__.getLocalizedString(30324)
+GOLDEN_PALM = __addon__.getLocalizedString(30325)
 # context menu items 
 ADD_ALL_TO_LIBRARY = __addon__.getLocalizedString(30307)
 ADD_TO_LIBRARY = __addon__.getLocalizedString(30308)

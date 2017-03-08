@@ -39,6 +39,8 @@ from bs4 import BeautifulSoup
 import requests
 import itertools
 import simplecache
+from audioop import reverse
+
 
 sys.setrecursionlimit(10000)
 
@@ -466,6 +468,7 @@ class SosacContentProvider(ContentProvider):
     def extract_info(self, url, itemType):
         #========================================================================================
         # extracts 'film' or 'tvseries' info from <table class="content ui-table-list striped">
+        # and returns list of media items presented in sosac
         #========================================================================================
         stranka = requests.get(url)
         polivka = BeautifulSoup(stranka.text, 'html.parser')
@@ -510,6 +513,63 @@ class SosacContentProvider(ContentProvider):
                           'name':name.encode('utf8')})
         return items
 
+
+    def extract_info_awards(self, url, tableClass):
+        #========================================================================================
+        # extracts 'awards' info from <div class=tableClass>
+        # and returns list of media presented in sosac
+        #========================================================================================
+        stranka = requests.get(url)
+        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        tabulka = polivka.findAll('div', attrs={'class':tableClass})
+        result = []
+        indexFilms = self.all_movies_with_key('c')
+        for tab in tabulka:
+            rok = int(tab.find('h2').get_text()[:5]) - 1
+            result.append({"q":"", "i":"", "n":{"cs":''.join(['[COLOR blue]', '----- ',
+                                                              str(rok + 1),   ' -----', 
+                                                              "[/COLOR]"]),
+                                                "en":''.join(['[COLOR blue]', '----- ',
+                                                               str(rok + 1),  ' -----'
+                                                               "[/COLOR]"])}, 
+                    "s":[], "d":[], "y":'', "c":'', "m":"", "g":[], "l":""})
+            filmy = [(odkaz.get_text(), 
+                      odkaz[('href')].replace('/film/', '').split('-')[0]) 
+                      for odkaz in tab.find('div', attrs={'class':"all"})
+                                     .find('table').find('tr')
+                                     .findAll('a',href=re.compile('^/film/'))]
+            for f in filmy:
+                id = f[1]
+                naz = f[0] + ' (%s) ' % (rok)
+                if indexFilms.get(id, None):
+                #indexFilms[id][0]['r'] = 'johoho :-)'
+                    result.append(indexFilms[id][0])
+                else:
+                    neni = u' Není na sosáči'
+                    nothing = ' Not available in Sosac'
+                    result.append({"q":"", "i":"", "n":{"cs":''.join(['[COLOR red]', naz, neni,
+                                                                      "[/COLOR]"]),
+                                                        "en":''.join(['[COLOR red]', naz,
+                                                                       nothing, "[/COLOR]"])},
+                                   "s":[], "d":[], "y":'', "c":'', "m":"", "g":[], "l":""})
+        return result
+
+
+    def extract_info_roky(self, url):
+        #========================================================================================
+        # extracts years urls from <div class="navigation">
+        #========================================================================================
+        stranka = requests.get(url)
+        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        tabulka = polivka.find('div', attrs={'class':"navigation"})
+        odkazy = [{'name':odkaz.get_text(), 'url':CSFD_BASE + odkaz[('href')]} for 
+            odkaz in tabulka.findAll('a')]
+        o = odkazy[-1]
+        if o['name'] not in o['url']:
+            o['url'] += '?years=' + o['name']
+        odkazy.sort(reverse=True)
+        return odkazy
+
     def csfd_lists(self,url):
         if 'level_0' in url:
             return self.prepare_dirs(csfd['level_0'])
@@ -534,6 +594,21 @@ class SosacContentProvider(ContentProvider):
             if ZEBRICKY_TVSHOW_SPEC_GENRE in url:
                 result = self.extract_info(url, 'tvshow')
                 return self.list_series_create(result)
+        if 'oceneni/' in url:
+            if 'level_1' in url:
+                return self.prepare_dirs(csfd['level_0'][1]['level_1'])
+            if OCENENI_OSCAR in url:
+                if OCENENI_OSCAR_ROKY in url:
+                    result = self.extract_info_awards(url,'th-1 ct-general oscars')   
+                    return self.list_videos_create(result)        
+                odkazy = self.extract_info_roky(url)    
+                return self.prepare_dirs(odkazy)
+            if OCENENI_ZLATA_PALMA in url:
+                if OCENENI_ZLATA_PALMA_ROKY in url:
+                    result = self.extract_info_awards(url, 'th-1 ct-general cannes-iff')
+                    return self.list_videos_create(result)  
+                odkazy = self.extract_info_roky(url)
+                return self.prepare_dirs(odkazy)
                 
 
     def _url(self, url):
