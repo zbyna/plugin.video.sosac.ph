@@ -18,5 +18,6 @@
     </category>
     <category label="30315">
         <setting label="30316" type="action" action="RunPlugin(plugin://plugin.video.sosac.ph/?action=636C6561725F6361636865)"/>
+        <setting label="30071" id="use-memory-cache" type="bool" default="true" />
     </category>
 </settings>

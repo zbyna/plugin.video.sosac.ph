@@ -83,7 +83,7 @@ class SosacContentProvider(ContentProvider):
     par = None
 
     def __init__(self, username=None, password=None, filter=None, reverse_eps=False,
-                 force_english=False):
+                 force_english=False, use_memory_cache=True):
         ContentProvider.__init__(self, name='sosac.ph', base_url=MOVIES_BASE_URL, username=username,
                                  password=password, filter=filter)
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
@@ -91,6 +91,8 @@ class SosacContentProvider(ContentProvider):
         self.reverse_eps = reverse_eps
         self.force_english = force_english
         self.cache = simplecache.SimpleCache()
+        self.cache.enable_mem_cache = use_memory_cache
+        
 
     def on_init(self):
         if self.force_english:
