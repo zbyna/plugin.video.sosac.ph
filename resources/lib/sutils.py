@@ -488,7 +488,16 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.set_subs(subs)
                 xbmc.executebuiltin('Container.Refresh')
             if params['action'] == 'clear_cache':
-                self.cache.delete('%')
+                if self.cache.delete('%'):
+                    self.showNotification('Common plugin cache info',
+                                          'disk cache cleared', 1000)
+                if self.provider.cache.execute_sql(
+                    'DELETE FROM simplecache WHERE  id  LIKE "sosac%"'):
+                    self.provider.cache.win.clearProperties()
+                    self.provider.cache.close()
+                    self.showNotification('Simple plugin cache info',
+                                          'disk and memory cache cleared', 1000)
+                
         return False
 
     def add_item_to_library(self, item_path, item_url):
