@@ -199,7 +199,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                 pocetSTRM += 1
                         for aa in adr:
                             pom1 = os.path.join(pom, aa)
-                            adr1, sou1 = xbmcvfs.listdir(pom1)
+                            _, sou1 = xbmcvfs.listdir(pom1)
                             for s1 in sou1:
                                 if 'strm' in s1:
                                     s1 = os.path.join(pom1, s1.decode('utf8'))
@@ -406,9 +406,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                                'tvshow.nfo')):
                 tvid = self.getTVDB(params['name'])
                 if tvid:
-                    self.add_item_to_library(os.path.join(item_dir, 
-                                   self.normalize_filename(params['name']), 'tvshow.nfo'),
-                                   'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                    self.add_item_to_library(os.path.join(item_dir,
+                                                          self.normalize_filename(params['name']), 'tvshow.nfo'),
+                                             'http://thetvdb.com/index.php?tab=series&id=' + tvid)
 
             episodes = self.provider.list_episodes(params['url'])
             for itm in episodes:
@@ -458,8 +458,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 xbmc.executebuiltin('Container.Refresh')
                 return False
             if params['action'] == 'add-all-to-library':
-                self.dialog.create( 'Adding to library')
-                self.dialog.update(0,'preparing ...')
+                self.dialog.create('Adding to library')
+                self.dialog.update(0, 'preparing ...')
                 if params['title'].decode('utf8') == MOVIES:
                     self.provider.movies_all_to_library()
                 elif params['title'].decode('utf8') == MOVIES_RECENTLY_ADDED:
@@ -492,12 +492,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.showNotification('Common plugin cache info',
                                           'disk cache cleared', 1000)
                 if self.provider.cache.execute_sql(
-                    'DELETE FROM simplecache WHERE  id  LIKE "sosac%"'):
+                        'DELETE FROM simplecache WHERE  id  LIKE "sosac%"'):
                     self.provider.cache.win.clearProperties()
                     self.provider.cache.close()
                     self.showNotification('Simple plugin cache info',
                                           'disk and memory cache cleared', 1000)
-                
+
         return False
 
     def add_item_to_library(self, item_path, item_url):

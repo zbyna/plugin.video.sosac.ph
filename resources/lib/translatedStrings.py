@@ -6,11 +6,11 @@ __addon__ = xbmcaddon.Addon(id=__scriptid__)
 CSFD_BASE = 'http://www.csfd.cz/'
 ZEBRICKY_FILMY_NEJ = 'zebricky/nejlepsi-filmy/?show=complete'
 ZEBRICKY_SPEC = 'zebricky/specificky-vyber/'
-ZEBRICKY_FILMY_SPEC = (ZEBRICKY_SPEC + 
-'?type=0&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
+ZEBRICKY_FILMY_SPEC = (ZEBRICKY_SPEC +
+                       '?type=0&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
 ZEBRICKY_TVSHOW_NEJ = 'zebricky/nejlepsi-serialy/?show=complete'
 ZEBRICKY_TVSHOW_SPEC = (ZEBRICKY_SPEC +
-'?type=3&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
+                        '?type=3&origin=&genre=&year_from=&year_to=&actor=&director=&ok=Zobrazit&_form_=charts')
 ZEBRICKY_FILMY_SPEC_GENRE = 'type=0'
 ZEBRICKY_TVSHOW_SPEC_GENRE = 'type=3'
 OCENENI_OSCAR = 'oceneni/1-oscars/'
@@ -43,7 +43,7 @@ BEST_TV_SHOWS = __addon__.getLocalizedString(30321)
 BEST_TV_SHOWS_BY_GENRE = __addon__.getLocalizedString(30322)
 OSCARS = __addon__.getLocalizedString(30324)
 GOLDEN_PALM = __addon__.getLocalizedString(30325)
-# context menu items 
+# context menu items
 ADD_ALL_TO_LIBRARY = __addon__.getLocalizedString(30307)
 ADD_TO_LIBRARY = __addon__.getLocalizedString(30308)
 REMOVE_FROM_SUBSCRIPTION = __addon__.getLocalizedString(30309)
