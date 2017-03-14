@@ -404,7 +404,9 @@ class SosacContentProvider(ContentProvider):
     def get_data_cached(self,url):
         return util.request(url) 
     
-      
+    @simplecache.use_cache(cache_days=3)
+    def requests_get_data_cached(self,url):
+        return requests.get(url).text 
       
     def add_to_library_decorator(func):
         def wrapper(*args, **kwargs):
@@ -466,14 +468,14 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
     
-
+    
     def extract_info(self, url, itemType):
         #========================================================================================
         # extracts 'film' or 'tvseries' info from <table class="content ui-table-list striped">
         # and returns list of media items presented in sosac
         #========================================================================================
-        stranka = requests.get(url)
-        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        stranka = self.requests_get_data_cached(url)
+        polivka = BeautifulSoup(stranka, 'html.parser')
         tabulka = polivka.find('table', class_="content ui-table-list striped")
         filmy = [film.get_text() for film in tabulka.findAll('td', class_='film')]
         hodnoceni = [prumer.get_text() for 
@@ -502,8 +504,8 @@ class SosacContentProvider(ContentProvider):
 
 
     def extract_info_genres(self, url, ZEBRICKY_items_SPEC):
-        stranka = requests.get(url)
-        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        stranka = self.requests_get_data_cached(url)
+        polivka = BeautifulSoup(stranka, 'html.parser')
         tabulka = polivka.find('select', attrs={'name':'genre'})
         genres = [(genre.get_text(), genre['value']) for 
             genre in tabulka.findAll('option')]
@@ -521,8 +523,8 @@ class SosacContentProvider(ContentProvider):
         # extracts 'awards' info from <div class=tableClass>
         # and returns list of media presented in sosac
         #========================================================================================
-        stranka = requests.get(url)
-        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        stranka = self.requests_get_data_cached(url)
+        polivka = BeautifulSoup(stranka, 'html.parser')
         tabulka = polivka.findAll('div', attrs={'class':tableClass})
         result = []
         indexFilms = self.all_movies_with_key('c')
@@ -561,8 +563,8 @@ class SosacContentProvider(ContentProvider):
         #========================================================================================
         # extracts years urls from <div class="navigation">
         #========================================================================================
-        stranka = requests.get(url)
-        polivka = BeautifulSoup(stranka.text, 'html.parser')
+        stranka = self.requests_get_data_cached(url)
+        polivka = BeautifulSoup(stranka, 'html.parser')
         tabulka = polivka.find('div', attrs={'class':"navigation"})
         odkazy = [{'name':odkaz.get_text(), 'url':CSFD_BASE + odkaz[('href')]} for 
             odkaz in tabulka.findAll('a')]
