@@ -452,7 +452,11 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     xbmc.executebuiltin('Container.Refresh')
                 return False
             if params['action'] == 'add-to-library':
-                if self.add_item(params, addToSubscription=True):
+                if self.settings['add_subscribe'] == '0':
+                    pomSubscription = True
+                else:
+                    pomSubscription = False
+                if self.add_item(params, addToSubscription=pomSubscription):
                     xbmc.executebuiltin('Container.Refresh')
                     return True
                 xbmc.executebuiltin('Container.Refresh')
@@ -477,6 +481,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.cache.delete("subscription")
                 return False
             if params['action'] == 'add-subscription':
+                if self.settings['add_subscribe'] == '1':
+                    if self.add_item(params, addToSubscription=True):
+                        xbmc.executebuiltin('Container.Refresh')
+                    return False
                 subs = self.get_subs()
                 if not 'refresh' in params:
                     params['refresh'] = str(self.getSetting("refresh_time"))
@@ -487,6 +495,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 subs.update({params['url']: sub})
                 self.set_subs(subs)
                 xbmc.executebuiltin('Container.Refresh')
+                return False
             if params['action'] == 'clear_cache':
                 if self.cache.delete('%'):
                     self.showNotification('Common plugin cache info',

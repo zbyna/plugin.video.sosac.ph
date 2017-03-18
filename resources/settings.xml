@@ -15,6 +15,7 @@
         <setting label="30101" id="library-tvshows" type="folder" default="special://profile/addon_data/plugin.video.sosac.ph/TVShows/" />
         <setting label="30102" id="start_sleep_time" type="slider" default="10" range="0,60" option="int" />
         <setting label="30105" id="refresh_time" type="slider" default="1" range="0,60" option="int" />
+        <setting label="30211" id="add_subscribe" type="enum" lvalues="30212|30213|30214" default="0" />
     </category>
     <category label="30315">
         <setting label="30316" type="action" action="RunPlugin(plugin://plugin.video.sosac.ph/?action=636C6561725F6361636865)"/>

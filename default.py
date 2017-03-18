@@ -33,8 +33,10 @@ __addon__ = xbmcaddon.Addon(id=__scriptid__)
 __language__ = __addon__.getLocalizedString
 __set__ = __addon__.getSetting
 
-settings = {'downloads': __set__('downloads'), 'quality': __set__(
-    'quality'), 'subs': __set__('subs') == 'true'}
+settings = {'downloads': __set__('downloads'),
+            'quality': __set__('quality'),
+            'subs': __set__('subs') == 'true',
+            'add_subscribe': __set__('add_subscribe')}
 
 
 reverse_eps = __set__('order-episodes') == '0'
@@ -49,4 +51,4 @@ if params == {}:
 util.info("Running sosac provider with params: " + str(params))
 XBMCSosac(SosacContentProvider(reverse_eps=reverse_eps, force_english=force_english,
                                use_memory_cache=use_memory_cache), settings,
-                               __addon__).run(params)
+          __addon__).run(params)

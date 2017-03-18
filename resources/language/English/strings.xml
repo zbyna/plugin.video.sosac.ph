@@ -49,6 +49,10 @@
     <string id="30208">Continue from?</string>
     <string id="30209">beginning</string>
     <string id="30210">last position</string>
+    <string id="30211">Subscription and Add to Library</string>
+    <string id="30212">During adding to library also subscribe</string>
+    <string id="30213">During subscribing also add to library</string>
+    <string id="30214">Do not join Subscription and Add to Library</string>
     <string id="30300">[B]Movies[/B]</string>
     <string id="30301">[B]TV Shows[/B]</string>
     <string id="30302">[B]Movies - by Genres[/B]</string>
