@@ -30,8 +30,10 @@ __addon__ = xbmcaddon.Addon(id=__scriptid__)
 __language__ = __addon__.getLocalizedString
 __set__ = __addon__.getSetting
 
-settings = {'downloads': __set__('downloads'), 'quality': __set__(
-    'quality'), 'subs': __set__('subs') == 'true'}
+settings = {'downloads': __set__('downloads'),
+            'quality': __set__('quality'),
+            'subs': __set__('subs') == 'true',
+            'add_subscribe': __set__('add_subscribe')}
 
 reverse_eps = __set__('order-episodes') == '0'
 

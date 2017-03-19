@@ -1,3 +1,19 @@
+[B]2.0.000:[/B] 19. 3. 2017
+- přidáno žebříčky csfd (nejlepší filmy, nejlepší seriály, celkově
+  a podle žánru) (zbyna)
+- přidáno ocenění z csfd (Oskary, Zlatá palma) (zbyna)
+- pridáno implementace memory cache pro časově a početně náročné operace (zbyna)
+  možnost vypnout memory cache v nastavení doplňku prozatím není funkční
+  (čeká se až se tento patch: 
+  https://github.com/marcelveldt/script.module.simplecache/pull/2
+  dostane do repozitáře kodi:
+  https://github.com/xbmc/repo-scripts/tree/jarvis/script.module.simplecache)
+- přidáno implementace multithread zpracování u IO operací
+- přidáno nastavení doplňku karta Obecné - vynutit anglické názvy
+- přidáno nastavení doplňku karta Cache - vyprádnit cache
+- přidáno nastavení doplňku karta Služba knihovny - odběr a přidání do knihovny,
+  pro nastavení možnosti současného provedení těchto položek (zbyna)
+- opraveno načítání Nově přidaných seriálů (zbyna)
 [B]1.2.118:[/B] 1. 1. 2017
 - opravena funkčnost menu "Přidej vše do knihovny" pro "Filmy", "Seriály" a 
   "Nově přidané filmy" (zbyna)
