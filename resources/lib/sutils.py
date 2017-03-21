@@ -30,7 +30,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         try:
             import StorageServer
             self.cache = StorageServer.StorageServer("Downloader")
-        except:
+        except Exception:
             import storageserverdummy as StorageServer
             self.cache = StorageServer.StorageServer("Downloader")
 
@@ -276,18 +276,16 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         util.info("SOSAC Service Started")
         try:
             sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60
-        except:
+        except Exception:
             sleep_time = self.sleep_time
-            pass
 
         self.sleep(sleep_time)
 
         try:
             self.last_run = float(self.cache.get("subscription.last_run"))
-        except:
+        except Exception:
             self.last_run = time.time()
             self.cache.set("subscription.last_run", str(self.last_run))
-            pass
 
         if not xbmc.abortRequested and time.time() > self.last_run:
             self.evalSchedules()
@@ -365,7 +363,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             urllib.urlencode({'seriesname': name, 'language': 'cs'}))
         try:
             tvid = re.search('<id>(\d+)</id>', data).group(1)
-        except:
+        except Exception:
             if level == 0:
                 tvid = self.getBBDB(name)
             else:
@@ -374,7 +372,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def add_item(self, params, addToSubscription=False):
         error = False
-        if not 'refresh' in params:
+        if 'refresh' not in params:
             params['refresh'] = str(self.getSetting("refresh_time"))
         sub = {'name': params['name'], 'refresh': params['refresh'], 'type': params['type']}
         sub['last_run'] = time.time()
@@ -383,7 +381,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                  self.normalize_filename(params['name'])) + '.strm'
         arg = {"play": params['url'], 'cp': 'sosac.ph', "title": title_pom}
         item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-        #util.info("item: " + item_url + " | " + str(params))
+        # util.info("item: " + item_url + " | " + str(params))
         new_items = False
         # self.showNotification('Linking', params['name'])
 
@@ -406,9 +404,10 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                                                'tvshow.nfo')):
                 tvid = self.getTVDB(params['name'])
                 if tvid:
-                    self.add_item_to_library(os.path.join(item_dir,
-                                                          self.normalize_filename(params['name']), 'tvshow.nfo'),
-                                             'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                    self.add_item_to_library(
+                        os.path.join(item_dir, self.normalize_filename(
+                            params['name']), 'tvshow.nfo'),
+                        'http://thetvdb.com/index.php?tab=series&id=' + tvid)
 
             episodes = self.provider.list_episodes(params['url'])
             for itm in episodes:
@@ -421,11 +420,6 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     "E" + nfo.group('episode') + '.strm')
                 arg = {"play": itm['url'], 'cp': 'sosac.ph',
                        "title": title_pom}
-                """
-                info = ''.join(('<episodedetails><season>', nfo.group('season'),
-                                '</season><episode>', nfo.group('episode'),
-                                '</episode></episodedetails>'))
-                """
                 item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
                 (err, new) = self.add_item_to_library(title_pom, item_url)
                 error |= err
@@ -442,7 +436,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def run_custom(self, params):
         if 'action' in params:
-            icon = os.path.join(self.addon.getAddonInfo('path'), 'icon.png')
+            # icon = os.path.join(self.addon.getAddonInfo('path'), 'icon.png')
             if params['action'] == 'remove-subscription':
                 subs = self.get_subs()
                 if params['url'] in subs.keys():
@@ -486,7 +480,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                         xbmc.executebuiltin('Container.Refresh')
                     return False
                 subs = self.get_subs()
-                if not 'refresh' in params:
+                if 'refresh' not in params:
                     params['refresh'] = str(self.getSetting("refresh_time"))
                 sub = {'name': params['name'],
                        'refresh': params['refresh'],
@@ -518,7 +512,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
             if not xbmcvfs.exists(dir):
                 try:
                     xbmcvfs.mkdirs(dir)
-                except Exception, e:
+                except Exception as e:
                     error = True
                     util.error('Failed to create directory 1: ' + dir)
 
@@ -528,7 +522,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     file_desc.write(item_url)
                     file_desc.close()
                     new = True
-                except Exception, e:
+                except Exception as e:
                     util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
                     error = True
         else:
