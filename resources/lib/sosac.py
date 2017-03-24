@@ -71,6 +71,8 @@ IMAGE_EPISODE = URL
 RATING = 'r'
 LANG = 'd'
 QUALITY = 'q'
+DESCRIPTION = 'p'
+RATING_STEP = 2
 
 
 class SosacContentProvider(ContentProvider):
@@ -191,12 +193,14 @@ class SosacContentProvider(ContentProvider):
         for video in videoArray:
             item = self.video_item()
             namePom = self.get_video_name(video)
+            if video['y']:
+                item['year'] = int(video['y'])
             item['title'] = namePom
             item['img'] = IMAGE_MOVIE + video['i']
             urlPom = video['l'] if video['l'] else ""
             item['url'] = urlPom
             if RATING in video:
-                item['rating'] = video[RATING]
+                item['rating'] = video[RATING] * RATING_STEP
             if LANG in video:
                 item['lang'] = video[LANG]
             if QUALITY in video:
@@ -220,10 +224,12 @@ class SosacContentProvider(ContentProvider):
         for serial in json_series_array:
             item = self.dir_item()
             item['title'] = self.get_localized_name(serial['n'])
+            if serial['y']:
+                item['year'] = int(serial['y'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
             if RATING in serial:
-                item['rating'] = serial[RATING]
+                item['rating'] = serial[RATING] * RATING_STEP
             subs = self.get_subs()
             if item['url'] in subs:
                 item['menu'] = {
@@ -479,7 +485,7 @@ class SosacContentProvider(ContentProvider):
         result = []
         for idf, fil, hod in itertools.izip(idFilmu, filmy, hodnoceni):
             id_ = idf.split('-')[1]
-            rating = float(hod.replace(',', '.').replace('%', '')) / 10
+            rating = float(hod.replace(',', '.').replace('%', '')) / 10 / 2
             if indexFilms.get(id_, None):
                 indexFilms[id_][0]['r'] = rating
                 result.append(indexFilms[id_][0])
@@ -525,7 +531,7 @@ class SosacContentProvider(ContentProvider):
                                                    "en": ''.join(['[COLOR blue]', '----- ',
                                                                   str(rok + 1), ' -----'
                                                                   "[/COLOR]"])},
-                           "s": [], "d": [], "y": '', "c": '', "m": "", "g": [], "l": ""})
+                           "s": [], "d": [], "y": '', 'r': 0, "c": '', "m": "", "g": [], "l": ""})
             filmy = [(odkaz.get_text(),
                       odkaz[('href')].replace('/film/', '').split('-')[0])
                      for odkaz in tab.find('div', attrs={'class': "all"})
