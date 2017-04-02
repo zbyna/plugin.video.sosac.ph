@@ -35,7 +35,7 @@
     <string id="30101">TVShow library</string>
     <string id="30102">Subscription service sleep on start (hours)</string>
     <string id="30103">General</string>
-    <string id="30104">Subscriptions</string>
+    <string id="30104">Library</string>
     <string id="30105">Default show check time (days)</string>
     <string id="31000">Usage of plugin is tracked whenever you play or download video.</string>
     <string id="30200">Old strm file format detected</string>
@@ -49,7 +49,7 @@
     <string id="30208">Continue from?</string>
     <string id="30209">beginning</string>
     <string id="30210">last position</string>
-    <string id="30211">Subscription and Add to Library</string>
+    <string id="30211">Subscription and Adding</string>
     <string id="30212">During adding to library also subscribe</string>
     <string id="30213">During subscribing also add to library</string>
     <string id="30214">Do not join Subscription and Add to Library</string>
