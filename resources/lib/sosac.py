@@ -37,6 +37,8 @@ from bs4 import BeautifulSoup
 import requests
 import itertools
 import simplecache
+import string
+import locale
 
 
 sys.setrecursionlimit(10000)
@@ -177,6 +179,8 @@ class SosacContentProvider(ContentProvider):
         result = []
         data = util.request(url)
         json_list = json.loads(data)
+        if self.force_english and (J_MOVIES_A_TO_Z_TYPE in url):
+            json_list = {key.title(): 'p/' + key.title() for key in json_list}
         for key, value in json_list.iteritems():
             item = self.dir_item(title=key.title())
             item['url'] = value
@@ -214,9 +218,19 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def list_videos(self, url):
-        data = util.request(url)
-        json_video_array = json.loads(data)
-        return self.list_videos_create(json_video_array)
+        if self.force_english and ('p/' in url):
+            pom = self.all_movies_by_name('n')
+            json_video_array = sorted(pom[url.split('/')[1]],
+                                      key=lambda k: k['n']['en'],
+                                      cmp=locale.strcoll)
+            return self.list_videos_create(json_video_array)
+        else:
+            data = util.request(url)
+            json_video_array = json.loads(data)
+            if self.force_english and J_MOVIES_MOST_POPULAR not in url:
+                json_video_array.sort(key=lambda k: k['n']['en'],
+                                      cmp=locale.strcoll)
+            return self.list_videos_create(json_video_array)
 
     def list_series_create(self, json_series_array):
         result = []
@@ -324,10 +338,26 @@ class SosacContentProvider(ContentProvider):
                 result[p[keyForDict]] = [p]
         return result
 
+    @simplecache.use_cache(cache_days=7)
+    def all_movies_by_name(self, keyForDict):
+        result = {}
+        for p in self.all_videos():
+            pom = p[keyForDict]['en'][0]
+            if pom not in string.ascii_letters:     # pom.isalpha()
+                pom = '0-9'
+            if pom in result:
+                result[pom].append(p)
+            else:
+                result[pom] = [p]
+        return result
+
     def list_year(self, url):
         data = self.all_movies_with_key('y')
         year = url.split('=')
         json_video_array = data[year[1]]
+        if self.force_english:
+            json_video_array.sort(key=lambda k: k['n']['en'],
+                                  cmp=locale.strcoll)
         return self.list_videos_create(json_video_array)
 
     def list_by_year(self, url):
