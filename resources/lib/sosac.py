@@ -95,6 +95,7 @@ class SosacContentProvider(ContentProvider):
     def on_init(self):
         if self.force_english:
             self.ISO_639_1_CZECH = 'en'
+            locale.setlocale(locale.LC_COLLATE, '')
         else:
             self.ISO_639_1_CZECH = ISO_639_1_CZECH
 
@@ -136,7 +137,10 @@ class SosacContentProvider(ContentProvider):
         for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l',
                        'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
             item = self.dir_item(title=letter.upper())
-            item['url'] = URL + url + letter + ".json"
+            if self.force_english:
+                item['url'] = url + '#' + letter.title()
+            else:
+                item['url'] = URL + url + letter + ".json"
             result.append(item)
         return result
 
@@ -275,8 +279,14 @@ class SosacContentProvider(ContentProvider):
         return result
 
     def list_series_letter(self, url):
-        data = util.request(url)
-        json_series_array = json.loads(data)
+        if self.force_english and J_TV_SHOWS_MOST_POPULAR not in url:
+            pom = self.all_tvshows_by_name('n')
+            json_series_array = sorted(pom[url.split('#')[1]],
+                                       key=lambda k: k['n']['en'],
+                                       cmp=locale.strcoll)
+        else:
+            data = util.request(url)
+            json_series_array = json.loads(data)
         return self.list_series_create(json_series_array)
 
     def time_usage(func):
@@ -351,6 +361,19 @@ class SosacContentProvider(ContentProvider):
                 result[pom] = [p]
         return result
 
+    @simplecache.use_cache(cache_days=7)
+    def all_tvshows_by_name(self, keyForDict):
+        result = {}
+        for p in self.all_tvshows():
+            pom = p[keyForDict]['en'][0]
+            if pom not in string.ascii_letters:     # pom.isalpha()
+                pom = '0-9'
+            if pom in result:
+                result[pom].append(p)
+            else:
+                result[pom] = [p]
+        return result
+
     def list_year(self, url):
         data = self.all_movies_with_key('y')
         year = url.split('=')
@@ -397,6 +420,8 @@ class SosacContentProvider(ContentProvider):
         result = []
         data = util.request(url)
         json_series = json.loads(data)
+        if self.force_english:
+            json_series.sort(key=lambda k: k['t']['en'], cmp=locale.strcoll)
         for episode in json_series:
             item = self.video_item()
             item['title'] = self.get_episode_recently_name(episode)
@@ -483,6 +508,8 @@ class SosacContentProvider(ContentProvider):
         shows = []
         for serial in self.all_tvshows():
             shows.append(serial)
+        if self.force_english:
+            shows.sort(key=lambda k: k['n']['en'], cmp=locale.strcoll)
         return self.list_series_create(shows)
 
     def prepare_dirs(self, menuItems):
