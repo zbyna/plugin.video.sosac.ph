@@ -248,6 +248,8 @@ class SosacContentProvider(ContentProvider):
             item['url'] = serial['l']
             if RATING in serial:
                 item['rating'] = serial[RATING] * RATING_STEP
+            if DESCRIPTION in serial:
+                item['plot'] = serial['p']
             subs = self.get_subs()
             if item['url'] in subs:
                 item['menu'] = {
