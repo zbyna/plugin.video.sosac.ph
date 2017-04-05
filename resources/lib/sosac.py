@@ -39,6 +39,7 @@ import itertools
 import simplecache
 import string
 import locale
+import unidecode
 
 
 sys.setrecursionlimit(10000)
@@ -355,8 +356,10 @@ class SosacContentProvider(ContentProvider):
         result = {}
         for p in self.all_videos():
             pom = p[keyForDict]['en'][0]
-            if pom not in string.ascii_letters:     # pom.isalpha()
-                pom = '0-9'
+            if pom not in string.ascii_letters:
+                pom = unidecode.unidecode(pom)
+                if pom not in string.ascii_letters:
+                    pom = '0-9'
             if pom in result:
                 result[pom].append(p)
             else:
@@ -368,8 +371,10 @@ class SosacContentProvider(ContentProvider):
         result = {}
         for p in self.all_tvshows():
             pom = p[keyForDict]['en'][0]
-            if pom not in string.ascii_letters:     # pom.isalpha()
-                pom = '0-9'
+            if pom not in string.ascii_letters:
+                pom = unidecode.unidecode(pom)
+                if pom not in string.ascii_letters:
+                    pom = '0-9'
             if pom in result:
                 result[pom].append(p)
             else:

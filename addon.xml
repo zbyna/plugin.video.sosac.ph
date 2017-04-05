@@ -9,6 +9,7 @@
         <import addon="script.module.requests" version="2.0.0" />
         <import addon="script.module.beautifulsoup4" version="4.3.2"/> 
         <import addon="script.module.simplecache" version="1.0.0" />
+        <import addon="script.module.unidecode" version="0.4.16" />
     </requires>
     <extension library="default.py" point="xbmc.python.pluginsource" provides="video">
         <provides>video</provides>
