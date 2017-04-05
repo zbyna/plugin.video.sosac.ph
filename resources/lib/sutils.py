@@ -275,7 +275,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def service(self):
         util.info("SOSAC Service Started")
         try:
-            sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60
+            sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60 * 60
         except Exception:
             sleep_time = self.sleep_time
 
