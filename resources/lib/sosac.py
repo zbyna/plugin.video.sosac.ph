@@ -94,10 +94,28 @@ class SosacContentProvider(ContentProvider):
         self.cache.enable_mem_cache = use_memory_cache
 
     def on_init(self):
+        custom_sort_dict = {'czech': 'cs_CZ.utf8', 'english': 'en_GB.utf8', 'os': ''}
         if self.force_english:
             self.ISO_639_1_CZECH = 'en'
-            locale.setlocale(locale.LC_COLLATE, '')
+            custom_sort = ADDON_SETTINGS_GET('force-sort')
+            try:
+                locale.setlocale(locale.LC_ALL, custom_sort)  # Windoof
+            except locale.Error:
+                try:
+                    locale.setlocale(locale.LC_ALL, custom_sort_dict[custom_sort])  # Linux
+                except locale.Error:
+                    locale.setlocale(locale.LC_ALL, custom_sort_dict['os'])
+                    xbmcgui.Dialog().notification(
+                        'Locale missing !!!',
+                        'Generate locale' + custom_sort_dict[custom_sort] + 'for your system',
+                        time=1000, sound=False)
+                    xbmcgui.Dialog().notification(
+                        'Deafult system locale',
+                        'Default locale from OS will be used',
+                        time=1000, sound=False)
+                    ADDON_SETTINGS_SET(id='force-sort', value='os')
         else:
+            ADDON_SETTINGS_SET(id='force-ch', value='false')
             self.ISO_639_1_CZECH = ISO_639_1_CZECH
 
     def capabilities(self):
@@ -135,11 +153,15 @@ class SosacContentProvider(ContentProvider):
 
     def a_to_z(self, url):
         result = []
-        for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l',
-                       'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+        __letters = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+                     'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        if self.parent.settings['force-ch']:
+            __letters.append('ch')
+        __letters.sort(cmp=locale.strcoll)
+        for letter in __letters:
             item = self.dir_item(title=letter.upper())
             if self.force_english:
-                item['url'] = url + '#' + letter.title()
+                item['url'] = url + '#' + letter.upper()
             else:
                 item['url'] = URL + url + letter + ".json"
             result.append(item)
@@ -186,8 +208,10 @@ class SosacContentProvider(ContentProvider):
         json_list = json.loads(data)
         if self.force_english and (J_MOVIES_A_TO_Z_TYPE in url):
             json_list = {key.title(): 'p/' + key.title() for key in json_list}
+            if self.parent.settings['force-ch']:
+                json_list[u'CH'] = u'p/CH'
         for key, value in json_list.iteritems():
-            item = self.dir_item(title=key.title())
+            item = self.dir_item(title=key.upper())
             item['url'] = value
             result.append(item)
             item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]":
@@ -195,7 +219,7 @@ class SosacContentProvider(ContentProvider):
                              'title': MOVIES_BY_GENRES,
                              'url': value}
                             }
-        return sorted(result, key=lambda i: i['title'])
+        return sorted(result, key=lambda i: i['title'], cmp=locale.strcoll)
 
     def list_videos_create(self, videoArray):
         result = []
@@ -225,9 +249,21 @@ class SosacContentProvider(ContentProvider):
     def list_videos(self, url):
         if self.force_english and ('p/' in url):
             pom = self.all_movies_by_name('n')
-            json_video_array = sorted(pom[url.split('/')[1]],
-                                      key=lambda k: k['n']['en'],
-                                      cmp=locale.strcoll)
+            pom_url = url.split('/')[1]
+            force_ch = ADDON_SETTINGS_GET('force-ch') == 'true'
+            if force_ch:
+                json_video_array = sorted(pom[url.split('/')[1]],
+                                          key=lambda k: k['n']['en'],
+                                          cmp=locale.strcoll)
+            else:
+                if pom_url == 'C':
+                    pom_list = pom['C']
+                    pom_list.extend(pom['CH'])
+                else:
+                    pom_list = pom[pom_url]
+                json_video_array = sorted(pom_list,
+                                          key=lambda k: k['n']['en'],
+                                          cmp=locale.strcoll)
             return self.list_videos_create(json_video_array)
         else:
             data = util.request(url)
@@ -284,9 +320,21 @@ class SosacContentProvider(ContentProvider):
     def list_series_letter(self, url):
         if self.force_english and J_TV_SHOWS_MOST_POPULAR not in url:
             pom = self.all_tvshows_by_name('n')
-            json_series_array = sorted(pom[url.split('#')[1]],
-                                       key=lambda k: k['n']['en'],
-                                       cmp=locale.strcoll)
+            pom_url = url.split('#')[1]
+            force_ch = ADDON_SETTINGS_GET('force-ch') == 'true'
+            if force_ch:
+                json_series_array = sorted(pom[pom_url],
+                                           key=lambda k: k['n']['en'],
+                                           cmp=locale.strcoll)
+            else:
+                if pom_url == 'C':
+                    pom_list = pom['C']
+                    pom_list.extend(pom['CH'])
+                else:
+                    pom_list = pom[pom_url]
+                json_series_array = sorted(pom_list,
+                                           key=lambda k: k['n']['en'],
+                                           cmp=locale.strcoll)
         else:
             data = util.request(url)
             json_series_array = json.loads(data)
@@ -355,11 +403,15 @@ class SosacContentProvider(ContentProvider):
     def all_movies_by_name(self, keyForDict):
         result = {}
         for p in self.all_videos():
-            pom = p[keyForDict]['en'][0]
-            if pom not in string.ascii_letters:
-                pom = unidecode.unidecode(pom)
+            pom = p[keyForDict]['en'][0:2]
+            if pom == 'Ch':
+                pom = 'CH'
+            else:
+                pom = pom[0]
                 if pom not in string.ascii_letters:
-                    pom = '0-9'
+                    pom = unidecode.unidecode(pom)
+                    if pom not in string.ascii_letters:
+                        pom = '0-9'
             if pom in result:
                 result[pom].append(p)
             else:
@@ -370,11 +422,15 @@ class SosacContentProvider(ContentProvider):
     def all_tvshows_by_name(self, keyForDict):
         result = {}
         for p in self.all_tvshows():
-            pom = p[keyForDict]['en'][0]
-            if pom not in string.ascii_letters:
-                pom = unidecode.unidecode(pom)
+            pom = p[keyForDict]['en'][0:2]
+            if pom == 'Ch':
+                pom = 'CH'
+            else:
+                pom = pom[0]
                 if pom not in string.ascii_letters:
-                    pom = '0-9'
+                    pom = unidecode.unidecode(pom)
+                    if pom not in string.ascii_letters:
+                        pom = '0-9'
             if pom in result:
                 result[pom].append(p)
             else:
@@ -388,6 +444,8 @@ class SosacContentProvider(ContentProvider):
         if self.force_english:
             json_video_array.sort(key=lambda k: k['n']['en'],
                                   cmp=locale.strcoll)
+        else:
+            json_video_array.sort(key=lambda k: k['n']['cs'])
         return self.list_videos_create(json_video_array)
 
     def list_by_year(self, url):

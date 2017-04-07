@@ -2,6 +2,8 @@ import xbmcaddon
 
 __scriptid__ = 'plugin.video.sosac.ph'
 __addon__ = xbmcaddon.Addon(id=__scriptid__)
+ADDON_SETTINGS_GET = xbmcaddon.Addon(id=__scriptid__).getSetting
+ADDON_SETTINGS_SET = xbmcaddon.Addon(id=__scriptid__).setSetting
 
 CSFD_BASE = 'http://www.csfd.cz/'
 ZEBRICKY_FILMY_NEJ = 'zebricky/nejlepsi-filmy/?show=complete'
