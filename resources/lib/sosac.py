@@ -118,6 +118,15 @@ class SosacContentProvider(ContentProvider):
             ADDON_SETTINGS_SET(id='force-ch', value='false')
             self.ISO_639_1_CZECH = ISO_639_1_CZECH
 
+    def time_usage(func):
+        def wrapper(*args, **kwargs):
+            beg_ts = time.time()
+            retval = func(*args, **kwargs)
+            end_ts = time.time()
+            util.info('"%s" - elapsed time: %f' % (func.__name__, end_ts - beg_ts))
+            return retval
+        return wrapper
+
     def capabilities(self):
         return ['resolve', 'categories', 'search']
 
@@ -221,6 +230,8 @@ class SosacContentProvider(ContentProvider):
                             }
         return sorted(result, key=lambda i: i['title'], cmp=locale.strcoll)
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def list_videos_create(self, videoArray):
         result = []
         for video in videoArray:
@@ -273,6 +284,8 @@ class SosacContentProvider(ContentProvider):
                                       cmp=locale.strcoll)
             return self.list_videos_create(json_video_array)
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def list_series_create(self, json_series_array):
         result = []
         i = 0
@@ -339,15 +352,6 @@ class SosacContentProvider(ContentProvider):
             data = util.request(url)
             json_series_array = json.loads(data)
         return self.list_series_create(json_series_array)
-
-    def time_usage(func):
-        def wrapper(*args, **kwargs):
-            beg_ts = time.time()
-            retval = func(*args, **kwargs)
-            end_ts = time.time()
-            util.info('"%s" - elapsed time: %f' % (func.__name__, end_ts - beg_ts))
-            return retval
-        return wrapper
 
     def all_videos(self):
         seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
@@ -437,6 +441,8 @@ class SosacContentProvider(ContentProvider):
                 result[pom] = [p]
         return result
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def list_year(self, url):
         data = self.all_movies_with_key('y')
         year = url.split('=')
@@ -448,21 +454,27 @@ class SosacContentProvider(ContentProvider):
             json_video_array.sort(key=lambda k: k['n']['cs'])
         return self.list_videos_create(json_video_array)
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
+    def list_of_years(self, url):
+        result = []
+        data = sorted(self.all_movies_with_key('y').keys(), reverse=True)
+        for s in data:
+            urlPom = url + "?" + YEAR_PARAM + "=" + s
+            item = self.dir_item(title=s, url=urlPom)
+            item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
+                            'action': 'add-all-to-library',
+                            'title': MOVIES_BY_YEAR,
+                            'url': urlPom}}
+            result.append(item)
+        return result
+
+    @time_usage
     def list_by_year(self, url):
         if "?" + YEAR_PARAM in url:
             return self.list_year(url)
         else:
-            result = []
-            data = self.all_movies_with_key('y')
-            for s in sorted(data.keys(), reverse=True):
-                urlPom = url + "?" + YEAR_PARAM + "=" + s
-                item = {'url': urlPom, 'title': s, 'type': 'dir'}
-                item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
-                                'action': 'add-all-to-library',
-                                'title': MOVIES_BY_YEAR,
-                                'url': urlPom}}
-                self._filter(result, item)
-            return result
+            return self.list_of_years(url)
 
     def list_episodes(self, url):
         result = []
@@ -568,7 +580,7 @@ class SosacContentProvider(ContentProvider):
     def generated_list_to_library(self, url):
         return (self.list_year(url), False, LIBRARY_TYPE_VIDEO)
 
-    # @time_usage
+    @time_usage
     def subscription_manager_tvshows_all_xml(self):
         shows = []
         for serial in self.all_tvshows():
