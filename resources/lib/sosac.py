@@ -237,8 +237,6 @@ class SosacContentProvider(ContentProvider):
         for video in videoArray:
             item = self.video_item()
             namePom = self.get_video_name(video)
-            if video['y']:
-                item['year'] = int(video['y'])
             item['title'] = namePom
             item['img'] = IMAGE_MOVIE + video['i']
             urlPom = video['l'] if video['l'] else ""
@@ -249,11 +247,13 @@ class SosacContentProvider(ContentProvider):
                 item['lang'] = video[LANG]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
-            item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
-                            {'url': urlPom,
-                                'action': 'add-to-library',
-                             'name': self.get_library_video_name(video),
-                             'type': LIBRARY_TYPE_VIDEO}}
+            if video['y']:
+                item['year'] = int(video['y'])
+                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
+                                {'url': urlPom,
+                                    'action': 'add-to-library',
+                                 'name': self.get_library_video_name(video),
+                                 'type': LIBRARY_TYPE_VIDEO}}
             result.append(item)
         return result
 
