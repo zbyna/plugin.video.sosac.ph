@@ -491,9 +491,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 xbmc.executebuiltin('Container.Refresh')
                 return False
             if params['action'] == 'clear_cache':
-                if self.cache.delete('%'):
-                    self.showNotification('Common plugin cache info',
-                                          'disk cache cleared', 1000)
+                self.cache.delete('%')
+                self.showNotification('Common plugin cache info',
+                                      'disk cache cleared', 1000)
                 if self.provider.cache.execute_sql(
                         'DELETE FROM simplecache WHERE  id  LIKE "sosac%"'):
                     self.provider.cache.win.clearProperties()
