@@ -273,7 +273,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
         return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
     def service(self):
-        util.info("SOSAC Service Started")
+        util.info('"SOSAC Service Started"')
         try:
             sleep_time = int(self.getSetting("start_sleep_time")) * 1000 * 60 * 60
         except Exception:
@@ -297,7 +297,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 self.last_run = time.time()
                 self.cache.set("subscription.last_run", str(self.last_run))
             self.sleep(self.sleep_time)
-        util.info("SOSAC Shutdown")
+        util.info('"SOSAC Shutdown"')
 
     def showNotification(self, title, message, time=1000):
         xbmcgui.Dialog().notification(self.encode(title), self.encode(message), time=time,
@@ -307,12 +307,12 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def evalSchedules(self):
         if not self.scanRunning() and not self.isPlaying():
             notified = False
-            util.info("SOSAC Loading subscriptions")
+            util.info('"SOSAC Loading subscriptions"')
             subs = self.get_subs()
             new_items = False
             for url, sub in subs.iteritems():
                 if xbmc.abortRequested:
-                    util.info("SOSAC Exiting")
+                    util.info('"SOSAC Exiting"')
                     return
                 if sub['type'] == LIBRARY_TYPE_TVSHOW:
                     if self.scanRunning() or self.isPlaying():
@@ -337,7 +337,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                             self.sleep(3000)
                         else:
                             n = (next_check - time.time()) / 3600
-                            util.debug("SOSAC Skipping " + url + " , next check in %dh" % n)
+                            util.debug('"SOSAC Skipping "' + url + '" , next check in %dh"' % n)
             if new_items:
                 xbmc.executebuiltin('UpdateLibrary(video)')
             notified = False
