@@ -92,7 +92,13 @@ class SosacContentProvider(ContentProvider):
         self.reverse_eps = reverse_eps
         self.force_english = force_english
         self.cache = simplecache.SimpleCache()
-        self.cache.enable_mem_cache = use_memory_cache
+        if use_memory_cache:
+            self.cache.enable_mem_cache = use_memory_cache
+        else:
+            xbmcgui.Dialog().notification(
+                'Memory cache: ',
+                'Can not switch off memory cache for now, sorry',
+                time=1000, sound=False)
 
     def on_init(self):
         custom_sort_dict = {'czech': 'cs_CZ.utf8', 'english': 'en_GB.utf8', 'os': ''}
