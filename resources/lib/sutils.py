@@ -472,7 +472,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 xbmc.executebuiltin('UpdateLibrary(video)')
                 return False
             if params['action'] == 'remove-all-from-subscription':
-                self.cache.delete("subscription")
+                self.set_subs({})
                 return False
             if params['action'] == 'add-subscription':
                 if self.settings['add_subscribe'] == '1':
@@ -500,6 +500,24 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.provider.cache.close()
                     self.showNotification('Simple plugin cache info',
                                           'disk and memory cache cleared', 1000)
+                return False
+            if params['action'] == 'custom_scan':
+                util.info('"SOSAC Custom subscription scan"')
+                subs = self.get_subs()
+                new_items = False
+                for url, sub in subs.iteritems():
+                    if sub['type'] == LIBRARY_TYPE_TVSHOW:
+                        util.debug("SOSAC Refreshing " + url)
+                        new_items |= self.run_custom({
+                            'action': 'add-to-library',
+                            'type': LIBRARY_TYPE_TVSHOW,
+                            'url': url,
+                            'name': sub['name'],
+                            'refresh': sub['refresh']
+                        })
+                        self.sleep(3000)
+                if new_items:
+                    xbmc.executebuiltin('UpdateLibrary(video)')
 
         return False
 
