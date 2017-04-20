@@ -40,6 +40,7 @@ import simplecache
 import string
 import locale
 import unidecode
+from operator import itemgetter
 
 
 sys.setrecursionlimit(10000)
@@ -211,9 +212,10 @@ class SosacContentProvider(ContentProvider):
             return self.csfd_lists(url)
         return self.list_videos(url)
 
+    @time_usage
     def load_json_list(self, url):
         result = []
-        data = util.request(url)
+        data = self.get_data_cached(url)
         json_list = json.loads(data)
         if self.force_english and (J_MOVIES_A_TO_Z_TYPE in url):
             json_list = {key.title(): 'p/' + key.title() for key in json_list}
@@ -257,6 +259,7 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
+    @time_usage
     def list_videos(self, url):
         if self.force_english and ('p/' in url):
             pom = self.all_movies_by_name('n')
@@ -277,7 +280,7 @@ class SosacContentProvider(ContentProvider):
                                           cmp=locale.strcoll)
             return self.list_videos_create(json_video_array)
         else:
-            data = util.request(url)
+            data = self.get_data_cached(url)
             json_video_array = json.loads(data)
             if self.force_english and J_MOVIES_MOST_POPULAR not in url:
                 json_video_array.sort(key=lambda k: k['n']['en'],
@@ -289,40 +292,22 @@ class SosacContentProvider(ContentProvider):
     def list_series_create(self, json_series_array):
         result = []
         i = 0
+        subs = self.get_subs()
         for serial in json_series_array:
             item = self.dir_item()
             item['title'] = self.get_localized_name(serial['n'])
-            if serial['y']:
-                item['year'] = int(serial['y'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
             if RATING in serial:
                 item['rating'] = serial[RATING] * RATING_STEP
             if DESCRIPTION in serial:
                 item['plot'] = serial['p']
-            subs = self.get_subs()
-            if item['url'] in subs:
-                item['menu'] = {
-                    "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
-                        'url': item['url'],
-                        'action': 'remove-subscription',
-                        'name': self.get_library_video_name(serial)
-                    }
-                }
-                item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
-                result.insert(i, item)
-                i += 1
-            else:
+            if serial['y']:
+                item['year'] = int(serial['y'])
                 item['menu'] = {
                     "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
                         'url': item['url'],
                         'action': 'add-to-library',
-                        'name': self.get_library_video_name(serial),
-                        'type': LIBRARY_TYPE_TVSHOW
-                    },
-                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
-                        'url': item['url'],
-                        'action': 'add-subscription',
                         'name': self.get_library_video_name(serial),
                         'type': LIBRARY_TYPE_TVSHOW
                     }
@@ -330,6 +315,7 @@ class SosacContentProvider(ContentProvider):
                 result.append(item)
         return result
 
+    @time_usage
     def list_series_letter(self, url):
         if self.force_english and J_TV_SHOWS_MOST_POPULAR not in url:
             pom = self.all_tvshows_by_name('n')
@@ -349,7 +335,7 @@ class SosacContentProvider(ContentProvider):
                                            key=lambda k: k['n']['en'],
                                            cmp=locale.strcoll)
         else:
-            data = util.request(url)
+            data = self.get_data_cached(url)
             json_series_array = json.loads(data)
         return self.list_series_create(json_series_array)
 
@@ -581,13 +567,60 @@ class SosacContentProvider(ContentProvider):
         return (self.list_year(url), False, LIBRARY_TYPE_VIDEO)
 
     @time_usage
-    def subscription_manager_tvshows_all_xml(self):
+    @simplecache.use_cache(cache_days=7)
+    def subscription_manager_baselist(self):
         shows = []
         for serial in self.all_tvshows():
             shows.append(serial)
         if self.force_english:
             shows.sort(key=lambda k: k['n']['en'], cmp=locale.strcoll)
-        return self.list_series_create(shows)
+        result = []
+        for serial in shows:
+            item = self.dir_item()
+            item['title'] = self.get_localized_name(serial['n'])
+            item['year'] = int(serial['y'])
+            item['img'] = IMAGE_SERIES + serial['i']
+            item['url'] = serial['l']
+            if RATING in serial:
+                item['rating'] = serial[RATING] * RATING_STEP
+            if DESCRIPTION in serial:
+                item['plot'] = serial['p']
+            item['menu'] = {
+                "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                    'url': item['url'],
+                    'action': 'add-to-library',
+                    'name': self.get_library_video_name(serial),
+                    'type': LIBRARY_TYPE_TVSHOW
+                },
+                "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                    'url': item['url'],
+                    'action': 'add-subscription',
+                    'name': self.get_library_video_name(serial),
+                    'type': LIBRARY_TYPE_TVSHOW
+                }
+            }
+            result.append(item)
+        return result
+
+    @time_usage
+    #@simplecache.use_cache(cache_days=7)
+    def subscription_manager_tvshows_all_xml(self):
+        shows = self.subscription_manager_baselist()
+        subs = self.get_subs()
+        menuEntry = "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]"
+        for key in subs:
+            pomIndex = map(itemgetter('url'), shows).index(key)
+            shows[pomIndex]['menu'] = {
+                "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                    'url': shows[pomIndex]['url'],
+                    'action': 'remove-subscription',
+                    'name': shows[pomIndex]['menu'][menuEntry]['name']
+                }
+            }
+            shows[pomIndex]['title'] = ('[B][COLOR yellow]*[/COLOR][/B] ' +
+                                        shows[pomIndex]['title'])
+            shows.insert(0, shows.pop(pomIndex))
+        return shows
 
     def prepare_dirs(self, menuItems):
         # ========================================================================================
@@ -760,5 +793,6 @@ class SosacContentProvider(ContentProvider):
         elif len(result) > 1 and select_cb:
             return select_cb(result)
 
+    @time_usage
     def get_subs(self):
         return self.parent.get_subs()
