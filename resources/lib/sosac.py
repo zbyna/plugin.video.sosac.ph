@@ -299,7 +299,6 @@ class SosacContentProvider(ContentProvider):
     def list_series_create(self, json_series_array):
         result = []
         i = 0
-        subs = self.get_subs()
         for serial in json_series_array:
             item = self.dir_item()
             item['title'] = self.get_localized_name(serial['n'])
