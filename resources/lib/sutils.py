@@ -533,9 +533,9 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def get_subs(self):
         if self.subs is not None:
             return self.subs
-        data = self.cache.get("subscription")
+        data = self.provider.cache.get('sosaccontentprovider.subscription')
         try:
-            if data == '':
+            if not data:
                 return {}
             self.subs = eval(data)
             return self.subs
@@ -545,7 +545,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def set_subs(self, subs):
         self.subs = subs
-        self.cache.set("subscription", repr(subs))
+        self.provider.cache.set('sosaccontentprovider.subscription', repr(subs),
+                                expiration=datetime.timedelta(days=365))
 
     @staticmethod
     def encode(string):
