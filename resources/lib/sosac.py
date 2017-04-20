@@ -76,6 +76,7 @@ RATING = 'r'
 LANG = 'd'
 QUALITY = 'q'
 DESCRIPTION = 'p'
+DUBBING = 'd'
 RATING_STEP = 2
 
 
@@ -504,7 +505,9 @@ class SosacContentProvider(ContentProvider):
         name = self.get_localized_name(video['n'])
         year = (" (" + video['y'] + ") ") if video['y'] else " "
         quality = ("- " + video[QUALITY].upper()) if video[QUALITY] else ""
-        return name + year + quality
+        dubbing = (''.join([" ", '(', u','.join(video[DUBBING]), ')'])
+                   ) if DUBBING in video else ""
+        return name + year + quality + dubbing
 
     def get_library_video_name(self, video):
         name = self.get_localized_name(video['n'])
