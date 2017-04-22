@@ -73,10 +73,10 @@ IMAGE_SERIES = IMAGE_URL + "558x313/serial-"
 IMAGE_EPISODE = URL
 
 RATING = 'r'
-LANG = 'd'
 QUALITY = 'q'
 DESCRIPTION = 'p'
 DUBBING = 'd'
+SUBTITLES = 's'
 RATING_STEP = 2
 
 
@@ -252,10 +252,12 @@ class SosacContentProvider(ContentProvider):
             item['url'] = urlPom
             if RATING in video:
                 item['rating'] = video[RATING] * RATING_STEP
-            if LANG in video:
-                item['lang'] = video[LANG]
+            if DUBBING in video:
+                item['dubbing'] = video[DUBBING]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
+            if SUBTITLES in video:
+                item['subtitles'] = video[SUBTITLES]
             if video['y']:
                 item['year'] = int(video['y'])
                 item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
