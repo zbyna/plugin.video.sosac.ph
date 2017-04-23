@@ -156,9 +156,15 @@ class SosacContentProvider(ContentProvider):
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
                     'action': 'add-all-to-library', 'title': title, 'url': url}}
             if title == SPRAVCE_ODBERU:
-                item['menu'] = {"[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION +
+                item['menu'] = {"[B][COLOR green]" + REFRESH_SUBSCRIPTION +
                                 "[/COLOR][/B]": {
-                                    'action': 'remove-all-from-subscription', 'title': title}}
+                                    'action': 'remove-all-from-subscription',
+                                    'title': title},
+                                "[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION +
+                                "[/COLOR][/B]": {
+                                    'action': 'remove-all-from-subscription',
+                                    'title': title}
+                                }
             result.append(item)
         return result
 
