@@ -638,6 +638,7 @@ class SosacContentProvider(ContentProvider):
             shows.insert(0, shows.pop(pomIndex))
         return shows
 
+    @time_usage
     def prepare_dirs(self, menuItems):
         # ========================================================================================
         # prepares dirs according to csfd.py for showing in Kodi
@@ -649,6 +650,8 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def extract_info(self, url, itemType):
         # ========================================================================================
         # extracts 'film' or 'tvseries' info from <table class="content ui-table-list striped">
@@ -678,10 +681,11 @@ class SosacContentProvider(ContentProvider):
                 result.append({"q": "", "i": "",
                                "n": {"cs": ''.join(['[COLOR red]', fil, neni, "[/COLOR]"]),
                                      "en": ''.join(['[COLOR red]', fil, nothing, "[/COLOR]"])},
-                               "s": [], "d": [], "y": '', "c": "", "m": "",
+                               "s": [], "y": '', "c": "", "m": "",
                                "r": rating, "g": [], "l": ""})
         return result
 
+    @time_usage
     def extract_info_genres(self, url, ZEBRICKY_items_SPEC):
         stranka = self.requests_get_data_cached(url)
         polivka = BeautifulSoup(stranka, 'html.parser')
@@ -696,6 +700,8 @@ class SosacContentProvider(ContentProvider):
                           'name': name.encode('utf8')})
         return items
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def extract_info_awards(self, url, tableClass):
         # ========================================================================================
         # extracts 'awards' info from <div class=tableClass>
@@ -714,7 +720,7 @@ class SosacContentProvider(ContentProvider):
                                                    "en": ''.join(['[COLOR blue]', '----- ',
                                                                   str(rok + 1), ' -----'
                                                                   "[/COLOR]"])},
-                           "s": [], "d": [], "y": '', 'r': 0, "c": '', "m": "", "g": [], "l": ""})
+                           "s": [],  "y": '', 'r': 0, "c": '', "m": "", "g": [], "l": ""})
             filmy = [(odkaz.get_text(),
                       odkaz[('href')].replace('/film/', '').split('-')[0])
                      for odkaz in tab.find('div', attrs={'class': "all"})
@@ -733,9 +739,11 @@ class SosacContentProvider(ContentProvider):
                                                                           "[/COLOR]"]),
                                                            "en": ''.join(['[COLOR red]', naz,
                                                                           nothing, "[/COLOR]"])},
-                                   "s": [], "d": [], "y": '', "c": '', "m": "", "g": [], "l": ""})
+                                   "s": [], "y": '', "c": '', "m": "", "g": [], "l": ""})
         return result
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def extract_info_roky(self, url):
         # ========================================================================================
         # extracts years urls from <div class="navigation">
@@ -751,6 +759,7 @@ class SosacContentProvider(ContentProvider):
         odkazy.sort(reverse=True)
         return odkazy
 
+    @time_usage
     def csfd_lists(self, url):
         if 'level_0' in url:
             return self.prepare_dirs(csfd['level_0'])
