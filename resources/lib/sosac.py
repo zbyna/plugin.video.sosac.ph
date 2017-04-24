@@ -158,7 +158,7 @@ class SosacContentProvider(ContentProvider):
             if title == SPRAVCE_ODBERU:
                 item['menu'] = {"[B][COLOR green]" + REFRESH_SUBSCRIPTION +
                                 "[/COLOR][/B]": {
-                                    'action': 'remove-all-from-subscription',
+                                    'action': 'custom_scan',
                                     'title': title},
                                 "[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION +
                                 "[/COLOR][/B]": {
