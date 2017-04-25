@@ -568,7 +568,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     @staticmethod
     def encode(string):
-        return unicodedata.normalize('NFKD', string.decode('utf-8')).encode('ascii', 'ignore')
+        return unicodedata.normalize(
+            'NFKD', string.decode('utf-8')).encode('ascii', 'ignore')
 
     def addon_dir(self):
         return self.addon.getAddonInfo('path')
