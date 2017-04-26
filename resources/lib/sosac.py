@@ -323,6 +323,11 @@ class SosacContentProvider(ContentProvider):
                         'url': item['url'],
                         'action': 'add-to-library',
                         'name': self.get_library_video_name(serial),
+                        'type': LIBRARY_TYPE_TVSHOW},
+                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                        'url': item['url'],
+                        'action': 'add-subscription',
+                        'name': self.get_library_video_name(serial),
                         'type': LIBRARY_TYPE_TVSHOW
                     }
                 }
