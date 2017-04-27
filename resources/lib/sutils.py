@@ -469,6 +469,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.provider.list_to_library(params['url'])
                 elif params['title'].decode('utf8') == MOVIES_BY_YEAR:
                     self.provider.generated_list_to_library(params['url'])
+                elif params['title'].decode('utf8') == BEST_MOVIES:
+                    self.provider.csfd_film_to_library(params['url'])
+                elif params['title'].decode('utf8') == BEST_TV_SHOWS:
+                    self.provider.csfd_tvshows_to_library(params['url'])
+                elif params['title'].decode('utf8') == 'csfd_genres':
+                    self.provider.csfd_genres_to_library(params['url'])
+                elif params['title'].decode('utf8') == 'csfd_awards_years':
+                    self.provider.csfd_awards_years_to_library(params['url'])
                 self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')
                 return False
