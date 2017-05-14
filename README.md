@@ -44,15 +44,36 @@ Pro správnou funkci doplňku je třeba **nejprve** nainstalovat také **aktuál
   
 - možnost **nepřihlašovat k odběru při přidání všech** seriálů do knihovny
 
+- přidáno info o dabingu do názvu filmu či seriálů 
+
+- přidáno  stream info - video, audio,titulky 
+  - nutná podpora ikonek ve skinu (vyzkoušen AEON MQ.7)  a stream resolver alespoň 2.0
+
+ ![](http://i.imgur.com/hO4Xg3k.jpg)
+
+- přidána možnost uživatelského scanu odběrů:
+  - **Nastavení/Služba knihovny/Zkontroluj odběry**
+  
+  - **kontextové menu Správce odběru/Zkontroluj odběry** 
+
 - pridáno **implementace memory cache** pro časově a početně náročné operace 
 
 - přidáno **implementace multithread** zpracování u IO operací
 
 - přidáno nastavení doplňku 
-                            **karta Obecné - vynutit anglické názvy**, 
-                            **karta Cache - vyprádnit cache**, 
-                            **karta Služba knihovny - odběr a přidání do knihovny**
-                              - pro nastavení možnosti současného provedení těchto položek 
+    - **karta Obecné - vynutit anglické názvy**,
+      1. **Třídit podle - czech, english, os**
+          - pokud v operačním systému neexistuje zvolená lokalizace tak se vybere defaultní, 
+je to problém třeba v LibreElec nebo OpenElec, kde skutečně lokalizace cs_CZ.utf8 není k dispozici, ale blíská se na lepší časy:  https://forum.libreelec.tv/thread-7356.html
+          - podle normy je české třídění nejprve abeceda až po ní písmena, pro mě překvapení 🙂 , windows to vůbec neřeší, ale v Linuxu pokud teda je lokalizace nainstalovaná, vše funguje podle normy
+
+      2. **Zobrazit 'CH' ve Filmy a Seriály**
+		    - zařadí 'ch' do seznamu Filmy a Seriály
+        
+    - **karta Cache - vyprádnit cache**, 
+    
+    - **karta Služba knihovny - odběr a přidání do knihovny**
+      - pro nastavení možnosti současného provedení těchto položek 
                               
 - přidána možnost **stahování na SMB zdroje**, vyžaduje  stream.resolver min. 1.6.447 
 
