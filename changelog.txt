@@ -1,3 +1,24 @@
+[B]2.0.100:[/B] 14. 5. 2017
+- celkové výrazné zrychlení pluginu:
+  přepsání subscribe manageru a zapnutí další úrovně cache (zbyna)
+  zapnutí cache pro parsování u csfd seznamů  (zbyna)
+- přidáno info o dabingu do názvu filmu či seriálů (zbyna)
+- přidáno  stream info - video, audio,titulky (zbyna)
+  nutná podpora ikonek ve skinu (vyzkoušen AEON MQ.7)
+  a stream resolver alespoň 2.0
+- přidáno popis k položkám Seriálů (zbyna)
+- přidáno možnost uživatelského scanu odběrů:
+  Nastavení/Služba knihovny/Zkontroluj odběry
+  kontextové menu Správce odběru/Zkontroluj odběry (zbyna)
+- přidáno automatické uzavření nastavení pluginu po vymazání cache (zbyna)
+- přidány další volby v Nastavení/Obecné/Vynutit anglické názvy:
+  Třídit podle - czech, english, os
+  zobrazit 'CH' ve Filmy a Seriály  (zbyna)
+- opraveno čitelnost v Nastavení/Služba knihovny (zbyna)
+- opraveno odložení prvního startu Subscription service
+- opraveno hláška při vymazání cache (zbyna)
+- opraveno možnost přidat neexistující položku do knihovny 
+  v csfd seznamech (zbyna)
 [B]2.0.000:[/B] 19. 3. 2017
 - přidáno žebříčky csfd (nejlepší filmy, nejlepší seriály, celkově
   a podle žánru) (zbyna)
