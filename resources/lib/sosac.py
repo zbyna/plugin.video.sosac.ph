@@ -40,6 +40,7 @@ import simplecache
 import string
 import locale
 import unidecode
+from operator import itemgetter
 
 
 sys.setrecursionlimit(10000)
@@ -72,9 +73,10 @@ IMAGE_SERIES = IMAGE_URL + "558x313/serial-"
 IMAGE_EPISODE = URL
 
 RATING = 'r'
-LANG = 'd'
 QUALITY = 'q'
 DESCRIPTION = 'p'
+DUBBING = 'd'
+SUBTITLES = 's'
 RATING_STEP = 2
 
 
@@ -91,14 +93,47 @@ class SosacContentProvider(ContentProvider):
         self.reverse_eps = reverse_eps
         self.force_english = force_english
         self.cache = simplecache.SimpleCache()
-        self.cache.enable_mem_cache = use_memory_cache
+        if use_memory_cache:
+            self.cache.enable_mem_cache = use_memory_cache
+        else:
+            xbmcgui.Dialog().notification(
+                'Memory cache: ',
+                'Can not switch off memory cache for now, sorry',
+                time=1000, sound=False)
 
     def on_init(self):
+        custom_sort_dict = {'czech': 'cs_CZ.utf8', 'english': 'en_GB.utf8', 'os': ''}
         if self.force_english:
             self.ISO_639_1_CZECH = 'en'
-            locale.setlocale(locale.LC_COLLATE, '')
+            custom_sort = ADDON_SETTINGS_GET('force-sort')
+            try:
+                locale.setlocale(locale.LC_ALL, custom_sort)  # Windoof
+            except locale.Error:
+                try:
+                    locale.setlocale(locale.LC_ALL, custom_sort_dict[custom_sort])  # Linux
+                except locale.Error:
+                    locale.setlocale(locale.LC_ALL, custom_sort_dict['os'])
+                    xbmcgui.Dialog().notification(
+                        'Locale missing !!!',
+                        'Generate locale' + custom_sort_dict[custom_sort] + 'for your system',
+                        time=1000, sound=False)
+                    xbmcgui.Dialog().notification(
+                        'Deafult system locale',
+                        'Default locale from OS will be used',
+                        time=1000, sound=False)
+                    ADDON_SETTINGS_SET(id='force-sort', value='os')
         else:
+            ADDON_SETTINGS_SET(id='force-ch', value='false')
             self.ISO_639_1_CZECH = ISO_639_1_CZECH
+
+    def time_usage(func):
+        def wrapper(*args, **kwargs):
+            beg_ts = time.time()
+            retval = func(*args, **kwargs)
+            end_ts = time.time()
+            util.info('"%s" - elapsed time: %f' % (func.__name__, end_ts - beg_ts))
+            return retval
+        return wrapper
 
     def capabilities(self):
         return ['resolve', 'categories', 'search']
@@ -121,9 +156,15 @@ class SosacContentProvider(ContentProvider):
                 item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
                     'action': 'add-all-to-library', 'title': title, 'url': url}}
             if title == SPRAVCE_ODBERU:
-                item['menu'] = {"[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION +
+                item['menu'] = {"[B][COLOR green]" + REFRESH_SUBSCRIPTION +
                                 "[/COLOR][/B]": {
-                                    'action': 'remove-all-from-subscription', 'title': title}}
+                                    'action': 'custom_scan',
+                                    'title': title},
+                                "[B][COLOR yellow]" + REMOVE_ALL_FROM_SUBSCRIPTION +
+                                "[/COLOR][/B]": {
+                                    'action': 'remove-all-from-subscription',
+                                    'title': title}
+                                }
             result.append(item)
         return result
 
@@ -135,11 +176,15 @@ class SosacContentProvider(ContentProvider):
 
     def a_to_z(self, url):
         result = []
-        for letter in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'e', 'h', 'i', 'j', 'k', 'l',
-                       'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+        __letters = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+                     'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        if self.parent.settings['force-ch']:
+            __letters.append('ch')
+        __letters.sort(cmp=locale.strcoll)
+        for letter in __letters:
             item = self.dir_item(title=letter.upper())
             if self.force_english:
-                item['url'] = url + '#' + letter.title()
+                item['url'] = url + '#' + letter.upper()
             else:
                 item['url'] = URL + url + letter + ".json"
             result.append(item)
@@ -180,14 +225,17 @@ class SosacContentProvider(ContentProvider):
             return self.csfd_lists(url)
         return self.list_videos(url)
 
+    @time_usage
     def load_json_list(self, url):
         result = []
-        data = util.request(url)
+        data = self.get_data_cached(url)
         json_list = json.loads(data)
         if self.force_english and (J_MOVIES_A_TO_Z_TYPE in url):
             json_list = {key.title(): 'p/' + key.title() for key in json_list}
+            if self.parent.settings['force-ch']:
+                json_list[u'CH'] = u'p/CH'
         for key, value in json_list.iteritems():
-            item = self.dir_item(title=key.title())
+            item = self.dir_item(title=key.upper())
             item['url'] = value
             result.append(item)
             item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]":
@@ -195,85 +243,85 @@ class SosacContentProvider(ContentProvider):
                              'title': MOVIES_BY_GENRES,
                              'url': value}
                             }
-        return sorted(result, key=lambda i: i['title'])
+        return sorted(result, key=lambda i: i['title'], cmp=locale.strcoll)
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def list_videos_create(self, videoArray):
         result = []
         for video in videoArray:
             item = self.video_item()
             namePom = self.get_video_name(video)
-            if video['y']:
-                item['year'] = int(video['y'])
             item['title'] = namePom
             item['img'] = IMAGE_MOVIE + video['i']
             urlPom = video['l'] if video['l'] else ""
             item['url'] = urlPom
             if RATING in video:
                 item['rating'] = video[RATING] * RATING_STEP
-            if LANG in video:
-                item['lang'] = video[LANG]
+            if DUBBING in video:
+                item['dubbing'] = video[DUBBING]
             if QUALITY in video:
                 item['quality'] = video[QUALITY]
-            item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
-                            {'url': urlPom,
-                                'action': 'add-to-library',
-                             'name': self.get_library_video_name(video),
-                             'type': LIBRARY_TYPE_VIDEO}}
+            if SUBTITLES in video:
+                item['subtitles'] = video[SUBTITLES]
+            if video['y']:
+                item['year'] = int(video['y'])
+                item['menu'] = {"[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]":
+                                {'url': urlPom,
+                                    'action': 'add-to-library',
+                                 'name': self.get_library_video_name(video),
+                                 'type': LIBRARY_TYPE_VIDEO}}
             result.append(item)
         return result
 
+    @time_usage
     def list_videos(self, url):
         if self.force_english and ('p/' in url):
             pom = self.all_movies_by_name('n')
-            json_video_array = sorted(pom[url.split('/')[1]],
-                                      key=lambda k: k['n']['en'],
-                                      cmp=locale.strcoll)
+            pom_url = url.split('/')[1]
+            force_ch = ADDON_SETTINGS_GET('force-ch') == 'true'
+            if force_ch:
+                json_video_array = sorted(pom[url.split('/')[1]],
+                                          key=lambda k: k['n']['en'],
+                                          cmp=locale.strcoll)
+            else:
+                if pom_url == 'C':
+                    pom_list = pom['C']
+                    pom_list.extend(pom['CH'])
+                else:
+                    pom_list = pom[pom_url]
+                json_video_array = sorted(pom_list,
+                                          key=lambda k: k['n']['en'],
+                                          cmp=locale.strcoll)
             return self.list_videos_create(json_video_array)
         else:
-            data = util.request(url)
+            data = self.get_data_cached(url)
             json_video_array = json.loads(data)
             if self.force_english and J_MOVIES_MOST_POPULAR not in url:
                 json_video_array.sort(key=lambda k: k['n']['en'],
                                       cmp=locale.strcoll)
             return self.list_videos_create(json_video_array)
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def list_series_create(self, json_series_array):
         result = []
         i = 0
         for serial in json_series_array:
             item = self.dir_item()
             item['title'] = self.get_localized_name(serial['n'])
-            if serial['y']:
-                item['year'] = int(serial['y'])
             item['img'] = IMAGE_SERIES + serial['i']
             item['url'] = serial['l']
             if RATING in serial:
                 item['rating'] = serial[RATING] * RATING_STEP
             if DESCRIPTION in serial:
                 item['plot'] = serial['p']
-            subs = self.get_subs()
-            if item['url'] in subs:
-                item['menu'] = {
-                    "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
-                        'url': item['url'],
-                        'action': 'remove-subscription',
-                        'name': self.get_library_video_name(serial)
-                    }
-                }
-                item['title'] = '[B][COLOR yellow]*[/COLOR][/B] ' + item['title']
-                result.insert(i, item)
-                i += 1
-            else:
+            if serial['y']:
+                item['year'] = int(serial['y'])
                 item['menu'] = {
                     "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
                         'url': item['url'],
                         'action': 'add-to-library',
-                        'name': self.get_library_video_name(serial),
-                        'type': LIBRARY_TYPE_TVSHOW
-                    },
-                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
-                        'url': item['url'],
-                        'action': 'add-subscription',
                         'name': self.get_library_video_name(serial),
                         'type': LIBRARY_TYPE_TVSHOW
                     }
@@ -281,25 +329,29 @@ class SosacContentProvider(ContentProvider):
                 result.append(item)
         return result
 
+    @time_usage
     def list_series_letter(self, url):
         if self.force_english and J_TV_SHOWS_MOST_POPULAR not in url:
             pom = self.all_tvshows_by_name('n')
-            json_series_array = sorted(pom[url.split('#')[1]],
-                                       key=lambda k: k['n']['en'],
-                                       cmp=locale.strcoll)
+            pom_url = url.split('#')[1]
+            force_ch = ADDON_SETTINGS_GET('force-ch') == 'true'
+            if force_ch:
+                json_series_array = sorted(pom[pom_url],
+                                           key=lambda k: k['n']['en'],
+                                           cmp=locale.strcoll)
+            else:
+                if pom_url == 'C':
+                    pom_list = pom['C']
+                    pom_list.extend(pom['CH'])
+                else:
+                    pom_list = pom[pom_url]
+                json_series_array = sorted(pom_list,
+                                           key=lambda k: k['n']['en'],
+                                           cmp=locale.strcoll)
         else:
-            data = util.request(url)
+            data = self.get_data_cached(url)
             json_series_array = json.loads(data)
         return self.list_series_create(json_series_array)
-
-    def time_usage(func):
-        def wrapper(*args, **kwargs):
-            beg_ts = time.time()
-            retval = func(*args, **kwargs)
-            end_ts = time.time()
-            util.info('"%s" - elapsed time: %f' % (func.__name__, end_ts - beg_ts))
-            return retval
-        return wrapper
 
     def all_videos(self):
         seznam = json.loads(util.request(URL + J_MOVIES_A_TO_Z_TYPE))
@@ -355,11 +407,15 @@ class SosacContentProvider(ContentProvider):
     def all_movies_by_name(self, keyForDict):
         result = {}
         for p in self.all_videos():
-            pom = p[keyForDict]['en'][0]
-            if pom not in string.ascii_letters:
-                pom = unidecode.unidecode(pom)
+            pom = p[keyForDict]['en'][0:2]
+            if pom == 'Ch':
+                pom = 'CH'
+            else:
+                pom = pom[0]
                 if pom not in string.ascii_letters:
-                    pom = '0-9'
+                    pom = unidecode.unidecode(pom)
+                    if pom not in string.ascii_letters:
+                        pom = '0-9'
             if pom in result:
                 result[pom].append(p)
             else:
@@ -370,17 +426,23 @@ class SosacContentProvider(ContentProvider):
     def all_tvshows_by_name(self, keyForDict):
         result = {}
         for p in self.all_tvshows():
-            pom = p[keyForDict]['en'][0]
-            if pom not in string.ascii_letters:
-                pom = unidecode.unidecode(pom)
+            pom = p[keyForDict]['en'][0:2]
+            if pom == 'Ch':
+                pom = 'CH'
+            else:
+                pom = pom[0]
                 if pom not in string.ascii_letters:
-                    pom = '0-9'
+                    pom = unidecode.unidecode(pom)
+                    if pom not in string.ascii_letters:
+                        pom = '0-9'
             if pom in result:
                 result[pom].append(p)
             else:
                 result[pom] = [p]
         return result
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def list_year(self, url):
         data = self.all_movies_with_key('y')
         year = url.split('=')
@@ -388,23 +450,31 @@ class SosacContentProvider(ContentProvider):
         if self.force_english:
             json_video_array.sort(key=lambda k: k['n']['en'],
                                   cmp=locale.strcoll)
+        else:
+            json_video_array.sort(key=lambda k: k['n']['cs'])
         return self.list_videos_create(json_video_array)
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
+    def list_of_years(self, url):
+        result = []
+        data = sorted(self.all_movies_with_key('y').keys(), reverse=True)
+        for s in data:
+            urlPom = url + "?" + YEAR_PARAM + "=" + s
+            item = self.dir_item(title=s, url=urlPom)
+            item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
+                            'action': 'add-all-to-library',
+                            'title': MOVIES_BY_YEAR,
+                            'url': urlPom}}
+            result.append(item)
+        return result
+
+    @time_usage
     def list_by_year(self, url):
         if "?" + YEAR_PARAM in url:
             return self.list_year(url)
         else:
-            result = []
-            data = self.all_movies_with_key('y')
-            for s in sorted(data.keys(), reverse=True):
-                urlPom = url + "?" + YEAR_PARAM + "=" + s
-                item = {'url': urlPom, 'title': s, 'type': 'dir'}
-                item['menu'] = {"[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
-                                'action': 'add-all-to-library',
-                                'title': MOVIES_BY_YEAR,
-                                'url': urlPom}}
-                self._filter(result, item)
-            return result
+            return self.list_of_years(url)
 
     def list_episodes(self, url):
         result = []
@@ -442,7 +512,9 @@ class SosacContentProvider(ContentProvider):
         name = self.get_localized_name(video['n'])
         year = (" (" + video['y'] + ") ") if video['y'] else " "
         quality = ("- " + video[QUALITY].upper()) if video[QUALITY] else ""
-        return name + year + quality
+        dubbing = (''.join([" ", '(', u','.join(video[DUBBING]), ')'])
+                   ) if DUBBING in video else ""
+        return name + year + quality + dubbing
 
     def get_library_video_name(self, video):
         name = self.get_localized_name(video['n'])
@@ -510,15 +582,63 @@ class SosacContentProvider(ContentProvider):
     def generated_list_to_library(self, url):
         return (self.list_year(url), False, LIBRARY_TYPE_VIDEO)
 
-    # @time_usage
-    def subscription_manager_tvshows_all_xml(self):
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
+    def subscription_manager_baselist(self):
         shows = []
         for serial in self.all_tvshows():
             shows.append(serial)
         if self.force_english:
             shows.sort(key=lambda k: k['n']['en'], cmp=locale.strcoll)
-        return self.list_series_create(shows)
+        result = []
+        for serial in shows:
+            item = self.dir_item()
+            item['title'] = self.get_localized_name(serial['n'])
+            item['year'] = int(serial['y'])
+            item['img'] = IMAGE_SERIES + serial['i']
+            item['url'] = serial['l']
+            if RATING in serial:
+                item['rating'] = serial[RATING] * RATING_STEP
+            if DESCRIPTION in serial:
+                item['plot'] = serial['p']
+            item['menu'] = {
+                "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]": {
+                    'url': item['url'],
+                    'action': 'add-to-library',
+                    'name': self.get_library_video_name(serial),
+                    'type': LIBRARY_TYPE_TVSHOW
+                },
+                "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                    'url': item['url'],
+                    'action': 'add-subscription',
+                    'name': self.get_library_video_name(serial),
+                    'type': LIBRARY_TYPE_TVSHOW
+                }
+            }
+            result.append(item)
+        return result
 
+    @time_usage
+    #@simplecache.use_cache(cache_days=7)
+    def subscription_manager_tvshows_all_xml(self):
+        shows = self.subscription_manager_baselist()
+        subs = self.get_subs()
+        menuEntry = "[B][COLOR red]" + ADD_TO_LIBRARY + "[/COLOR][/B]"
+        for key in subs:
+            pomIndex = map(itemgetter('url'), shows).index(key)
+            shows[pomIndex]['menu'] = {
+                "[B][COLOR red]" + REMOVE_FROM_SUBSCRIPTION + "[/COLOR][/B]": {
+                    'url': shows[pomIndex]['url'],
+                    'action': 'remove-subscription',
+                    'name': shows[pomIndex]['menu'][menuEntry]['name']
+                }
+            }
+            shows[pomIndex]['title'] = ('[B][COLOR yellow]*[/COLOR][/B] ' +
+                                        shows[pomIndex]['title'])
+            shows.insert(0, shows.pop(pomIndex))
+        return shows
+
+    @time_usage
     def prepare_dirs(self, menuItems):
         # ========================================================================================
         # prepares dirs according to csfd.py for showing in Kodi
@@ -530,6 +650,8 @@ class SosacContentProvider(ContentProvider):
             result.append(item)
         return result
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def extract_info(self, url, itemType):
         # ========================================================================================
         # extracts 'film' or 'tvseries' info from <table class="content ui-table-list striped">
@@ -559,10 +681,11 @@ class SosacContentProvider(ContentProvider):
                 result.append({"q": "", "i": "",
                                "n": {"cs": ''.join(['[COLOR red]', fil, neni, "[/COLOR]"]),
                                      "en": ''.join(['[COLOR red]', fil, nothing, "[/COLOR]"])},
-                               "s": [], "d": [], "y": '', "c": "", "m": "",
+                               "s": [], "y": '', "c": "", "m": "",
                                "r": rating, "g": [], "l": ""})
         return result
 
+    @time_usage
     def extract_info_genres(self, url, ZEBRICKY_items_SPEC):
         stranka = self.requests_get_data_cached(url)
         polivka = BeautifulSoup(stranka, 'html.parser')
@@ -577,6 +700,8 @@ class SosacContentProvider(ContentProvider):
                           'name': name.encode('utf8')})
         return items
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def extract_info_awards(self, url, tableClass):
         # ========================================================================================
         # extracts 'awards' info from <div class=tableClass>
@@ -595,7 +720,7 @@ class SosacContentProvider(ContentProvider):
                                                    "en": ''.join(['[COLOR blue]', '----- ',
                                                                   str(rok + 1), ' -----'
                                                                   "[/COLOR]"])},
-                           "s": [], "d": [], "y": '', 'r': 0, "c": '', "m": "", "g": [], "l": ""})
+                           "s": [],  "y": '', 'r': 0, "c": '', "m": "", "g": [], "l": ""})
             filmy = [(odkaz.get_text(),
                       odkaz[('href')].replace('/film/', '').split('-')[0])
                      for odkaz in tab.find('div', attrs={'class': "all"})
@@ -614,9 +739,11 @@ class SosacContentProvider(ContentProvider):
                                                                           "[/COLOR]"]),
                                                            "en": ''.join(['[COLOR red]', naz,
                                                                           nothing, "[/COLOR]"])},
-                                   "s": [], "d": [], "y": '', "c": '', "m": "", "g": [], "l": ""})
+                                   "s": [], "y": '', "c": '', "m": "", "g": [], "l": ""})
         return result
 
+    @time_usage
+    @simplecache.use_cache(cache_days=7)
     def extract_info_roky(self, url):
         # ========================================================================================
         # extracts years urls from <div class="navigation">
@@ -632,6 +759,7 @@ class SosacContentProvider(ContentProvider):
         odkazy.sort(reverse=True)
         return odkazy
 
+    @time_usage
     def csfd_lists(self, url):
         if 'level_0' in url:
             return self.prepare_dirs(csfd['level_0'])
@@ -690,5 +818,6 @@ class SosacContentProvider(ContentProvider):
         elif len(result) > 1 and select_cb:
             return select_cb(result)
 
+    @time_usage
     def get_subs(self):
         return self.parent.get_subs()

@@ -2,6 +2,8 @@ import xbmcaddon
 
 __scriptid__ = 'plugin.video.sosac.ph'
 __addon__ = xbmcaddon.Addon(id=__scriptid__)
+ADDON_SETTINGS_GET = xbmcaddon.Addon(id=__scriptid__).getSetting
+ADDON_SETTINGS_SET = xbmcaddon.Addon(id=__scriptid__).setSetting
 
 CSFD_BASE = 'http://www.csfd.cz/'
 ZEBRICKY_FILMY_NEJ = 'zebricky/nejlepsi-filmy/?show=complete'
@@ -50,3 +52,4 @@ REMOVE_FROM_SUBSCRIPTION = __addon__.getLocalizedString(30309)
 SUBSCRIBE = __addon__.getLocalizedString(30312)
 REMOVE_ALL_FROM_SUBSCRIPTION = __addon__.getLocalizedString(30313)
 SUBSCRIBE_ALL_TV_SHOWS = __addon__.getLocalizedString(30314)
+REFRESH_SUBSCRIPTION = __addon__.getLocalizedString(30217)

@@ -53,6 +53,9 @@
     <string id="30212">During adding to library also subscribe</string>
     <string id="30213">During subscribing also add to library</string>
     <string id="30214">Do not join Subscription and Add to Library</string>
+    <string id="30215">sort by:</string>
+    <string id="30216">show 'CH' in Movies and TV Shows</string>
+    <string id="30217">Check subscriptions</string>
     <string id="30300">[B]Movies[/B]</string>
     <string id="30301">[B]TV Shows[/B]</string>
     <string id="30302">[B]Movies - by Genres[/B]</string>
