@@ -859,14 +859,23 @@ class SosacContentProvider(ContentProvider):
             return self.base_url + "/" + url.lstrip('./')
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
+
+        def probeHTML5(result):
+            r = requests.get(result['url'], headers=result['headers'], allow_redirects=False)
+            if r.status_code == 302:
+                util.info('"Redirect url je:" ' + r.headers['Location'])
+            elif r.status_code == 200:
+                result['url'] = r.content
+            return result
+
         data = item['url']
         if not data:
             raise ResolveException('Video is not available.')
         result = self.findstreams([STREAMUJ_URL + data])
         if len(result) == 1:
-            return result[0]
+            return probeHTML5(result[0])
         elif len(result) > 1 and select_cb:
-            return select_cb(result)
+            return probeHTML5(select_cb(result))
 
     @time_usage
     def get_subs(self):
