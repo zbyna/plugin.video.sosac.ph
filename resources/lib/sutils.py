@@ -387,7 +387,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
         if params['type'] == LIBRARY_TYPE_VIDEO:
             item_dir = self.getSetting('library-movies')
-            (error, new_items) = self.add_item_to_library(title_pom, item_url)
+            (error, new_items) = self.add_item_to_library(title_pom, item_url, params['type'])
         elif params['type'] == LIBRARY_TYPE_TVSHOW:
             if not ('notify' in params):
                 self.showNotification(sub['name'], 'Checking new content')
@@ -407,7 +407,8 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.add_item_to_library(
                         os.path.join(item_dir, self.normalize_filename(
                             params['name']), 'tvshow.nfo'),
-                        'http://thetvdb.com/index.php?tab=series&id=' + tvid)
+                        'http://thetvdb.com/index.php?tab=series&id=' + tvid,
+                        params['type'])
 
             episodes = self.provider.list_episodes(params['url'])
             for itm in episodes:
@@ -421,7 +422,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 arg = {"play": itm['url'], 'cp': 'sosac.ph',
                        "title": title_pom}
                 item_url = xbmcutil._create_plugin_url(arg, 'plugin://' + self.addon_id + '/')
-                (err, new) = self.add_item_to_library(title_pom, item_url)
+                (err, new) = self.add_item_to_library(title_pom, item_url, params['type'])
                 error |= err
                 if new is True and not err:
                     new_items = True
@@ -468,6 +469,14 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                     self.provider.list_to_library(params['url'])
                 elif params['title'].decode('utf8') == MOVIES_BY_YEAR:
                     self.provider.generated_list_to_library(params['url'])
+                elif params['title'].decode('utf8') == BEST_MOVIES:
+                    self.provider.csfd_film_to_library(params['url'])
+                elif params['title'].decode('utf8') == BEST_TV_SHOWS:
+                    self.provider.csfd_tvshows_to_library(params['url'])
+                elif params['title'].decode('utf8') == 'csfd_genres':
+                    self.provider.csfd_genres_to_library(params['url'])
+                elif params['title'].decode('utf8') == 'csfd_awards_years':
+                    self.provider.csfd_awards_years_to_library(params['url'])
                 self.dialog.close()
                 xbmc.executebuiltin('UpdateLibrary(video)')
                 return False
@@ -521,7 +530,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
         return False
 
-    def add_item_to_library(self, item_path, item_url):
+    def add_item_to_library(self, item_path, item_url, params_type):
         error = False
         new = False
         if item_path:
@@ -543,6 +552,16 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
                 except Exception as e:
                     util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
                     error = True
+            elif params_type == LIBRARY_TYPE_VIDEO:
+                try:
+                    file_desc = xbmcvfs.File(item_path, 'w')
+                    file_desc.write(item_url)
+                    file_desc.close()
+                    util.info('"File ' + os.path.basename(item_path) + ' file was updated"')
+                except Exception as e:
+                    util.error('Failed to create .strm file: ' + item_path + " | " + str(e))
+                    error = True
+
         else:
             error = True
 
@@ -551,7 +570,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
     def get_subs(self):
         if self.subs is not None:
             return self.subs
-        data = self.provider.cache.get('sosaccontentprovider.subscription')
+        data = self.provider.cache.get('sosa.subscription')
         try:
             if not data:
                 return {}
@@ -563,7 +582,7 @@ class XBMCSosac(xbmcprovider.XBMCMultiResolverContentProvider):
 
     def set_subs(self, subs):
         self.subs = subs
-        self.provider.cache.set('sosaccontentprovider.subscription', repr(subs),
+        self.provider.cache.set('sosa.subscription', repr(subs),
                                 expiration=datetime.timedelta(days=365))
 
     @staticmethod

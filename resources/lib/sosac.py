@@ -323,6 +323,11 @@ class SosacContentProvider(ContentProvider):
                         'url': item['url'],
                         'action': 'add-to-library',
                         'name': self.get_library_video_name(serial),
+                        'type': LIBRARY_TYPE_TVSHOW},
+                    "[B][COLOR yellow]" + SUBSCRIBE + "[/COLOR][/B]": {
+                        'url': item['url'],
+                        'action': 'add-subscription',
+                        'name': self.get_library_video_name(serial),
                         'type': LIBRARY_TYPE_TVSHOW
                     }
                 }
@@ -546,6 +551,8 @@ class SosacContentProvider(ContentProvider):
             pomSeznam, question, libraryType = func(*args, **kwargs)
             total = len(pomSeznam)
             for i, video in enumerate(pomSeznam):
+                if not 'menu' in video:
+                    continue
                 item = video['menu']['[B][COLOR red]' + ADD_TO_LIBRARY + '[/COLOR][/B]']
                 item["update"] = True
                 item["notify"] = True
@@ -581,6 +588,30 @@ class SosacContentProvider(ContentProvider):
     @add_to_library_decorator
     def generated_list_to_library(self, url):
         return (self.list_year(url), False, LIBRARY_TYPE_VIDEO)
+
+    @add_to_library_decorator
+    def csfd_film_to_library(self, url):
+        result = self.extract_info(url, 'film')
+        return (self.list_videos_create(result), False, LIBRARY_TYPE_VIDEO)
+
+    @add_to_library_decorator
+    def csfd_tvshows_to_library(self, url):
+        result = self.extract_info(url, 'tvshow')
+        return (self.list_series_create(result), False, LIBRARY_TYPE_TVSHOW)
+
+    def csfd_genres_to_library(self, url):
+        if ZEBRICKY_FILMY_SPEC_GENRE in url:
+            self.csfd_film_to_library(url)
+        else:
+            self.csfd_tvshows_to_library(url)
+
+    @add_to_library_decorator
+    def csfd_awards_years_to_library(self, url):
+        if OCENENI_OSCAR in url:
+            result = self.extract_info_awards(url, 'th-1 ct-general oscars')
+        elif OCENENI_ZLATA_PALMA in url:
+            result = self.extract_info_awards(url, 'th-1 ct-general cannes-iff')
+        return (self.list_videos_create(result), False, LIBRARY_TYPE_VIDEO)
 
     @time_usage
     @simplecache.use_cache(cache_days=7)
@@ -647,6 +678,8 @@ class SosacContentProvider(ContentProvider):
         for di in menuItems:
             item = self.dir_item(title=di['name'])
             item['url'] = di['url']
+            if 'menu' in di:
+                item['menu'] = di['menu']
             result.append(item)
         return result
 
@@ -696,8 +729,17 @@ class SosacContentProvider(ContentProvider):
         items = []
         for name, kod in genres:
             urlPom = ZEBRICKY_items_SPEC.replace('genre=', ''.join(['genre=', kod]))
-            items.append({'url': CSFD_BASE + urlPom + '&show=complete',
-                          'name': name.encode('utf8')})
+            items.append({
+                'url': CSFD_BASE + urlPom + '&show=complete',
+                'name': name.encode('utf8'),
+                'menu': {
+                    "[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
+                        'action': 'add-all-to-library',
+                        'title': 'csfd_genres',
+                        'url': CSFD_BASE + urlPom + '&show=complete'
+                    }
+                }
+            })
         return items
 
     @time_usage
@@ -757,6 +799,14 @@ class SosacContentProvider(ContentProvider):
         if o['name'] not in o['url']:
             o['url'] += '?years=' + o['name']
         odkazy.sort(reverse=True)
+        for item in odkazy:
+            item['menu'] = {
+                "[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]": {
+                    'action': 'add-all-to-library',
+                    'title': 'csfd_awards_years',
+                    'url': item['url']
+                }
+            }
         return odkazy
 
     @time_usage
@@ -809,14 +859,23 @@ class SosacContentProvider(ContentProvider):
             return self.base_url + "/" + url.lstrip('./')
 
     def resolve(self, item, captcha_cb=None, select_cb=None):
+
+        def probeHTML5(result):
+            r = requests.get(result['url'], headers=result['headers'], allow_redirects=False)
+            if r.status_code == 302:
+                util.info('"Redirect url je:" ' + r.headers['Location'])
+            elif r.status_code == 200:
+                result['url'] = r.content
+            return result
+
         data = item['url']
         if not data:
             raise ResolveException('Video is not available.')
         result = self.findstreams([STREAMUJ_URL + data])
         if len(result) == 1:
-            return result[0]
+            return probeHTML5(result[0])
         elif len(result) > 1 and select_cb:
-            return select_cb(result)
+            return probeHTML5(select_cb(result))
 
     @time_usage
     def get_subs(self):

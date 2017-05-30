@@ -8,25 +8,44 @@ csfd = {'level_0':
                 'url': CSFD_BASE + 'zebricky/level_1',
                 'type': 'DIR',
                 'level_1': [
-                        {
-                            'name': BEST_MOVIES,
-                            'url': CSFD_BASE + ZEBRICKY_FILMY_NEJ,
-                            'type': 'DIR'},
-                        {
-                            'name': BEST_MOVIES_BY_GENRE,
-                            'url': CSFD_BASE + ZEBRICKY_FILMY_SPEC,
-                            'type': 'DIR'
-                        },
                     {
-                            'name': BEST_TV_SHOWS,
-                            'url': CSFD_BASE + ZEBRICKY_TVSHOW_NEJ,
-                            'type': 'DIR'
-                            },
-                    {
-                            'name': BEST_TV_SHOWS_BY_GENRE,
-                            'url': CSFD_BASE + ZEBRICKY_TVSHOW_SPEC,
-                            'type': 'DIR'
+                        'name': BEST_MOVIES,
+                        'url': CSFD_BASE + ZEBRICKY_FILMY_NEJ,
+                        'type': 'DIR',
+                        'menu':
+                        {
+                            "[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]":
+                            {
+                                'action': 'add-all-to-library',
+                                'title': BEST_MOVIES,
+                                'url': CSFD_BASE + ZEBRICKY_FILMY_NEJ
                             }
+                        }
+                    },
+                    {
+                        'name': BEST_MOVIES_BY_GENRE,
+                        'url': CSFD_BASE + ZEBRICKY_FILMY_SPEC,
+                        'type': 'DIR'
+                    },
+                    {
+                        'name': BEST_TV_SHOWS,
+                        'url': CSFD_BASE + ZEBRICKY_TVSHOW_NEJ,
+                        'type': 'DIR',
+                        'menu':
+                        {
+                            "[B][COLOR red]" + ADD_ALL_TO_LIBRARY + "[/COLOR][/B]":
+                            {
+                                'action': 'add-all-to-library',
+                                'title': BEST_TV_SHOWS,
+                                'url': CSFD_BASE + ZEBRICKY_TVSHOW_NEJ
+                            }
+                        }
+                    },
+                    {
+                        'name': BEST_TV_SHOWS_BY_GENRE,
+                        'url': CSFD_BASE + ZEBRICKY_TVSHOW_SPEC,
+                        'type': 'DIR'
+                    }
                 ]
             },
             {
