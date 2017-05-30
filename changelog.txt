@@ -1,3 +1,10 @@
+[B]2.0.200:[/B] 30. 5. 2017
+- návrat Prihlas k odběru do kontextového menu Seriály (zbyna)
+- přidáno Přidej vše do knihovny pro příslušné položky csfd seznamů (zbyna)
+- opraveno při vymazání cache se nemaže Seznam odběrů (zbyna)
+- přidán update strm souboru při opakovaném scanu pro filmy přidané do knihovny
+  (zbyna)
+- přidána experimentální podpora pro přehrávání položek TEST HTML5 (zbyna)
 [B]2.0.100:[/B] 14. 5. 2017
 - celkové výrazné zrychlení pluginu:
   přepsání subscribe manageru a zapnutí další úrovně cache (zbyna)
