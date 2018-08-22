@@ -7,6 +7,8 @@
 
 [![Code Health](https://landscape.io/github/zbyna/plugin.video.sosac.ph/master/landscape.svg?style=flat)](https://landscape.io/github/zbyna/plugin.video.sosac.ph/master)
 
+Info in [English](https://github.com/zbyna/plugin.video.sosac.ph/blob/master/README.EN.MD) (sorry for using Google Translate)
+
 Tato verze je založena na verzi 1.2.11 https://github.com/kodi-czsk/plugin.video.sosac.ph (fork)
 
 Děkuji autorům.
